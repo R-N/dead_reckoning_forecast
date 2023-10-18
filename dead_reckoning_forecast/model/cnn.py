@@ -15,15 +15,15 @@ class MobileNet(nn.Module):
     @staticmethod
     def get_pretrained(weights=models.MobileNet_V3_Small_Weights.IMAGENET1K_V1, freeze=True, device=DEFAULT_DEVICE):
         model = models.mobilenet_v3_small(weights=weights)
-        model = list(model.children())[0]
+        model = model.features
         for param in model.parameters():
             param.requires_grad = not freeze
         model = model.to(device)
         return model
     
     @staticmethod
-    def get_custom(in_channel=4, device=DEFAULT_DEVICE):
-        model = mobilenet_v3_small(in_channel=in_channel)
-        model = list(model.children())[0]
+    def get_custom(in_channel=4, weights=models.MobileNet_V3_Small_Weights.IMAGENET1K_V1, freeze=True, device=DEFAULT_DEVICE):
+        model = mobilenet_v3_small(in_channel=in_channel, weights=weights, freeze=freeze)
+        model = model.features
         model = model.to(device)
         return model

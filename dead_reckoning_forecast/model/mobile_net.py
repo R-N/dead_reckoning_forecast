@@ -8,6 +8,16 @@ from torchvision.ops.misc import Conv2dNormActivation
 from ..util import DEFAULT_DEVICE
 from functools import partial
 
+def create_firstconv(in_channel, out_channel, norm_layer=None):
+    return Conv2dNormActivation(
+        in_channel,
+        out_channel,
+        kernel_size=3,
+        stride=2,
+        norm_layer=norm_layer,
+        activation_layer=nn.Hardswish,
+    )
+
 class MobileNetV3(nn.Module):
     def __init__(
         self,
@@ -41,16 +51,11 @@ class MobileNetV3(nn.Module):
 
         # building first layer
         firstconv_output_channels = inverted_residual_setting[0].input_channels
-        layers.append(
-            Conv2dNormActivation(
-                in_channel,
-                firstconv_output_channels,
-                kernel_size=3,
-                stride=2,
-                norm_layer=norm_layer,
-                activation_layer=nn.Hardswish,
-            )
-        )
+        layers.append(create_firstconv(
+            in_channel=in_channel, 
+            out_channel=firstconv_output_channels, 
+            norm_layer=norm_layer
+        ))
 
         # building inverted residual blocks
         for cnf in inverted_residual_setting:
@@ -90,6 +95,9 @@ class MobileNetV3(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.zeros_(m.bias)
 
+        self.norm_layer = norm_layer
+        self.firstconv_output_channels = firstconv_output_channels
+
     def _forward_impl(self, x):
         x = self.features(x)
 
@@ -108,6 +116,8 @@ def _mobilenet_v3(
     last_channel,
     weights,
     progress,
+    in_channel=3,
+    freeze=True,
     **kwargs,
 ):
     if weights is not None:
@@ -117,11 +127,29 @@ def _mobilenet_v3(
 
     if weights is not None:
         model.load_state_dict(weights.get_state_dict(progress=progress, check_hash=True))
+    
+    conv = model.features
+
+    for param in model.parameters():
+        param.requires_grad = not freeze
+
+    firstconv = create_firstconv(
+        in_channel=in_channel, 
+        out_channel=model.firstconv_output_channels,
+        norm_layer=model.norm_layer
+    )
+
+    conv = nn.Sequential(
+        firstconv,
+        *(list(conv)[1:])
+    )
+
+    model.features = conv
 
     return model
 
 def mobilenet_v3_small(
-    *, in_channel=4, weights=None, progress=True, **kwargs
+    *, in_channel=3, weights=None, progress=True, **kwargs
 ):
     inverted_residual_setting, last_channel = _mobilenet_v3_conf("mobilenet_v3_small", **kwargs)
     return _mobilenet_v3(inverted_residual_setting, last_channel, weights, progress, in_channel=in_channel, **kwargs)
