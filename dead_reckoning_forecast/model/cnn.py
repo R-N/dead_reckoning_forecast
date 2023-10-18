@@ -11,7 +11,7 @@ class MobileNet(nn.Module):
         super().__init__()
 
     @staticmethod
-    def get_pretrained(weights=models.MobileNet_V3_Large_Weights.IMAGENET1K_V2, freeze=True, device=DEFAULT_DEVICE):
+    def get_pretrained(weights=models.MobileNet_V3_Small_Weights.IMAGENET1K_V1, freeze=True, device=DEFAULT_DEVICE):
         model = models.mobilenet_v3_small(weights=weights)
         model = list(model.children())[0]
         for param in model.parameters():
