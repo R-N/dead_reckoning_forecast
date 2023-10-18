@@ -41,6 +41,8 @@ def to_tensor(x, Tensor=Tensor):
         return {k: to_tensor(v, Tensor) for k, v in x.items()}
     if isinstance(x, pd.DataFrame):
         return to_tensor(x.to_numpy())
+    if isinstance(x, pd.Series):
+        return to_tensor(x.to_numpy())
     if torch.is_tensor(x):
         return x.to(Tensor.dtype)
     if hasattr(x, "__iter__"):
