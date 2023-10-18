@@ -131,8 +131,12 @@ def _mobilenet_v3(
     
     conv = model.features
 
-    for m in list(model.children()):
-        for param in model.parameters():
+    for m in list(model.children())[1:]:
+        for param in m.parameters():
+            param.requires_grad = not freeze
+
+    for m in list(conv.children())[2:]:
+        for param in m.parameters():
             param.requires_grad = not freeze
 
     firstconv = create_firstconv(
