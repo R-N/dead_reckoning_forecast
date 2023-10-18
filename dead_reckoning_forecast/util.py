@@ -2,6 +2,7 @@ import shutil
 import os
 import torch
 from PIL import Image
+import numpy as np
 
 from moviepy.editor import VideoFileClip
 
@@ -50,3 +51,17 @@ def array_to_image(arr):
 def show_video(file_path):
     clip=VideoFileClip(file_path)
     return clip.ipython_display(width=280)
+
+def vector_magnitudes(df):
+    return np.sqrt((df**2).sum(axis=1))
+
+def max_vector_magnitude(df):
+    return vector_magnitudes(df).max()
+
+def remove_leading_trailing_zeros(df, cols=y_cols):
+    s = df[cols].ne(0).sum(axis=1)
+    df = df[s.cumsum().ne(0) & s[::-1].cumsum().ne(0)]
+    df = df.copy()
+    return df
+
+remove_zeros = remove_leading_trailing_zeros
