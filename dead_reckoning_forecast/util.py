@@ -75,7 +75,7 @@ def remove_leading_trailing_zeros(df, cols):
 remove_zeros = remove_leading_trailing_zeros
 
 class Cache:
-    def __init__(self, max_cache=torch.inf, remove_old=False):
+    def __init__(self, max_cache=None, remove_old=False):
         self.max_cache = max_cache
         self.cache = OrderedDict()
         self.remove_old = remove_old

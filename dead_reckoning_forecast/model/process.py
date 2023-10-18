@@ -3,6 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 from ..data.video import get_frames
 from ..util import array_to_image, show_video
+import gc
 
 def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, reduction=torch.linalg.vector_norm):
     if val:
@@ -53,6 +54,8 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         avg_loss += loss
 
         n += b
+
+        gc.collect()
         
     avg_loss /= n
     
