@@ -12,7 +12,7 @@ import numpy as np
 import gc
 
 class BaseDataset(Dataset):
-    def __init__(self, max_cache=None, val=True, **cache_kwargs):
+    def __init__(self, max_cache=None, val=None, **cache_kwargs):
         self.create_cache(max_cache, **cache_kwargs)
         self.val = val
 
@@ -63,7 +63,7 @@ class BaseDataset(Dataset):
     
 
 class WrapperDataset(BaseDataset):
-    def __init__(self, dataset, max_cache=None, val=True):
+    def __init__(self, dataset, max_cache=None, val=None):
         super().__init__(max_cache=max_cache, val=val)
         self.dataset = dataset
 
@@ -83,7 +83,7 @@ class WrapperDataset(BaseDataset):
 
 
 class SubDataset(WrapperDataset):
-    def __init__(self, dataset, index, max_cache=None, val=True):
+    def __init__(self, dataset, index, max_cache=None, val=None):
         super().__init__(dataset=dataset, max_cache=max_cache, val=val)
         if isinstance(index, pd.Series) or isinstance(index, pd.Index):
             index = index.to_numpy()
@@ -109,7 +109,7 @@ class SubDataset(WrapperDataset):
         return self.dataset.get(self.index[idx], val=val)
 
 class TimeSeriesDataset(BaseDataset):   
-    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None, val=True):
+    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None, val=None):
         super().__init__(max_cache=max_cache, val=val)
         self.df = df
         assert x_len > 0 and y_len > 0
@@ -153,7 +153,7 @@ class TimeSeriesDataset(BaseDataset):
     
 
 class FrameDataset(BaseDataset):
-    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None, val=True):
+    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None, val=None):
         super().__init__(max_cache=max_cache, val=val)
         self.frame_dir = frame_dir  
         self.transform = transform
@@ -187,7 +187,7 @@ class FrameDataset(BaseDataset):
     
     
 class MultiChannelFrameDataset(BaseDataset):
-    def __init__(self, frame_dir, channels=constants.channels, max_cache=None, val=True, **kwargs):
+    def __init__(self, frame_dir, channels=constants.channels, max_cache=None, val=None, **kwargs):
         super().__init__(max_cache=max_cache, val=val)
         self.channels = channels
         self.transform = None
@@ -223,7 +223,7 @@ class MultiChannelFrameDataset(BaseDataset):
         
         
 class TimeSeriesFrameDataset(BaseDataset):   
-    def __init__(self, ts_dataset, frame_dataset, max_cache=None, val=True):
+    def __init__(self, ts_dataset, frame_dataset, max_cache=None, val=None):
         super().__init__(max_cache=max_cache, val=val)
         self.ts_dataset = ts_dataset
         self.frame_dataset = frame_dataset
