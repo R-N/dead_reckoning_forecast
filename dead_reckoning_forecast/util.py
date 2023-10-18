@@ -60,7 +60,7 @@ def vector_magnitudes(df):
 def max_vector_magnitude(df):
     return vector_magnitudes(df).max()
 
-def remove_leading_trailing_zeros(df, cols=y_cols):
+def remove_leading_trailing_zeros(df, cols):
     s = df[cols].ne(0).sum(axis=1)
     df = df[s.cumsum().ne(0) & s[::-1].cumsum().ne(0)]
     df = df.copy()
