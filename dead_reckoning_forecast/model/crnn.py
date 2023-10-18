@@ -127,13 +127,13 @@ class CRNN(nn.Module):
         if self.training:
             x = x[:, -self.horizon:, :] if b else x[-self.horizon:, :]
         else:
-            x, h = take_last(x, b), take_last(h, b)
+            x, h = take_last_rnn(x, h, b)
             preds = []
             preds.append(x.squeeze(-2))
             for i in range(self.horizon-1):
                 print(x.shape, h[0].shape, h[1].shape)
                 x, h = self.rnn(x, h)
-                x, h = take_last(x, b), take_last(h, b)
+                x, h = take_last_rnn(x, h, b)
                 x = x + self.final_0(x)
                 preds.append(x.squeeze(-2))
 
@@ -143,6 +143,21 @@ class CRNN(nn.Module):
         x = self.final_n(x)
 
         return x, (x_0, x_1), xy
+    
+def take_last_rnn(x, h, b):
+    x = take_last(x, b)
+    h = permute_batch(h, b)
+    h = take_last(h, b)
+    h = permute_batch(h, b)
+    return x, h
+
+    
+def permute_batch(x, b):
+    if isinstance(x, tuple):
+        return [permute_batch(xi, b) for xi in x]
+    if b:
+        return x.permute(-2, -3, -1)
+    return x
         
 def take_last(x, b):
     if isinstance(x, tuple):
