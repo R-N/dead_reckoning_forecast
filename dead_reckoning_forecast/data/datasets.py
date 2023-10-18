@@ -143,7 +143,7 @@ class FrameDataset(BaseDataset):
 
     def __getitem__(self, idx):
         if hasattr(idx, "__iter__"):
-            return stack_samples([self[i] for i in idx])
+            return torch.stack([self[i] for i in idx])
         
         if self.cache and idx in self.cache:
             return self.cache[idx]
@@ -182,7 +182,7 @@ class MultiChannelFrameDataset(BaseDataset):
 
     def __getitem__(self, idx):
         if hasattr(idx, "__iter__"):
-            return stack_samples([self[i] for i in idx])
+            return torch.stack([self[i] for i in idx])
         
         if self.cache and idx in self.cache:
             return self.cache[idx]
