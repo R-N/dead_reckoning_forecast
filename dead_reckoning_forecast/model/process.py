@@ -9,42 +9,34 @@ def train_epoch(model, loader, loss_fn, opt, val=False):
         model.train()
         
     avg_loss = 0
-    total_correct = 0
-    total_samples = 0
-    
-    
+
     for i, batch in enumerate(loader):
-        x, label = batch
+        x, frames, y, w = batch
         x = x.to(model.device)
-        label = label.to(model.device)
+        frames = frames.to(model.device)
+        y = y.to(model.device)
+        w = w.to(model.device)
 
         if not val:
             opt.zero_grad()
         
-        pred = model(x)
-        loss = loss_fn(pred, label)
+        pred = model(x, frames)
+        loss = loss_fn(pred, y)
+
+        loss = loss * w
         
         if not val:
             loss.backward()
             opt.step()
         
         loss = loss.item()
-        pred_1 = torch.argmax(pred, dim=-1)
-        n_correct = (pred_1 == label).sum().item()
-        n_samples = label.size(0)
-        accuracy = n_correct / n_samples
-
-        #print(f"Step loss: {loss}, accuracy: {accuracy}")
+        #print(f"Step loss: {loss}")
         avg_loss += loss
-        total_correct += n_correct
-        total_samples += n_samples
         
     avg_loss /= (i+1)
-    accuracy = total_correct / total_samples
     
     ret = {
         "avg_loss": avg_loss,
-        "accuracy": accuracy
     }
         
     return ret
