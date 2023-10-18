@@ -5,7 +5,8 @@ from ..data.video import get_frames
 from ..util import array_to_image, show_video
 import gc
 
-def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, reduction=torch.linalg.vector_norm):
+def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm):
+    val = val or test
     if val:
         model.eval()
     else:
@@ -27,22 +28,26 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         
         pred, (x_0, x_1), xy_pred = model(x, frames)
         loss = loss_fn(pred, y)
-        internal_prediction_loss = loss_fn(x_1, x_0)
-        reconstruction_loss = loss_fn(xy_pred, xy)
+        if not test:
+            internal_prediction_loss = loss_fn(x_1, x_0)
+            reconstruction_loss = loss_fn(xy_pred, xy)
 
         print(loss.shape, w.shape, internal_prediction_loss.shape, reconstruction_loss.shape)
 
 
         loss = reduction(loss, dim=-1)
-        internal_prediction_loss = reduction(internal_prediction_loss, dim=-1)
-        reconstruction_loss = reduction(reconstruction_loss, dim=-1)
+        if not test:
+            internal_prediction_loss = reduction(internal_prediction_loss, dim=-1)
+            reconstruction_loss = reduction(reconstruction_loss, dim=-1)
 
         loss = loss * w
         loss = torch.sum(loss, dim=-1) #this is 1 because it has been normed, this is sum because it's weighted sum
-        internal_prediction_loss = torch.mean(internal_prediction_loss, dim=-1) #this is 1 because it has been normed
-        reconstruction_loss = torch.mean(reconstruction_loss, dim=-1) #this is 1 because it has been normed
+        if not test:
+            internal_prediction_loss = torch.mean(internal_prediction_loss, dim=-1) #this is 1 because it has been normed
+            reconstruction_loss = torch.mean(reconstruction_loss, dim=-1) #this is 1 because it has been normed
 
-        loss = loss + internal_prediction_loss + reconstruction_loss
+        if not test:
+            loss = loss + internal_prediction_loss + reconstruction_loss
         loss = torch.sum(loss, dim=-1) # this should result in 0 dim tensor
         
         if not val:
