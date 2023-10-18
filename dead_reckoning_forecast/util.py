@@ -3,8 +3,9 @@ import os
 import torch
 from PIL import Image
 import numpy as np
-
+from collections import OrderedDict
 from moviepy.editor import VideoFileClip
+import pandas as pd
 
 Tensor = torch.Tensor
 DEFAULT_DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
@@ -65,3 +66,89 @@ def remove_leading_trailing_zeros(df, cols=y_cols):
     return df
 
 remove_zeros = remove_leading_trailing_zeros
+
+class Cache:
+    def __init__(self, max_cache=torch.inf, remove_old=False):
+        self.max_cache = max_cache
+        self.cache = OrderedDict()
+        self.remove_old = remove_old
+
+    def clear(self):
+        self.cache.clear()
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        if hasattr(idx, "__iter__"):
+            return stack_samples([self[id] for id in idx])
+        return self.cache[idx]
+    
+    def __setitem__(self, idx, sample):
+        if len(self.cache) >= self.max_cache:
+            if self.remove_old:
+                self.cache.popitem(last=False)
+            else:
+                return
+        self.cache[idx] = sample
+
+    def __contains__(self, item):
+        return item in self.cache
+    
+def validate_device(device="cuda"):
+    return device if torch.cuda.is_available() else "cpu"
+
+
+def mkdir(dir):
+    Path(dir).mkdir(parents=True, exist_ok=True)
+
+def filter_dict(dict, keys):
+    return {k: v for k, v in dict.items() if k in keys}
+
+def filter_dict_2(dict, keys):
+    return {keys[k]: v for k, v in dict.items() if k in keys}
+
+def split_df(df, points, seed=42):
+    splits = np.split(
+        df.sample(frac=1, random_state=seed), 
+        [int(x*len(df)) for x in points]
+    )
+    return splits
+
+def split_df_2(df, points, test=-1, val=None, seed=42, return_3=False):
+    splits = split_df(df, points, seed=seed)
+
+    test_df = splits[test]
+    val_df = splits[val] if val else None
+    train_dfs = [s for s in splits if s is not test_df and s is not val_df]
+    train_df = pd.concat(train_dfs)
+
+    if val or return_3:
+        return train_df, val_df, test_df
+    return train_df, test_df
+
+def split_df_ratio(df, ratio=0.2, val=False, i=0, seed=42, return_3=False):
+    count = int(1.0/ratio)
+    splits = [k*ratio for k in range(1, count)]
+    splits = split_df(df, splits, seed=seed)
+    test_index = (count - 1 + i)%count
+    val_index = (test_index-1)%count if val else None
+    n = min([len(s) for s in splits])
+
+    leftovers = []
+
+    test_df = splits[test_index]
+    leftovers.append(test_df[n:])
+
+    val_df = test_df
+    if val:
+        val_df = splits[val_index]
+        leftovers.append(val_df[n:])
+
+    train_dfs = [s for s in splits if s is not test_df and s is not val_df]
+    test_df = test_df[:n]
+    val_df = val_df[:n]
+    train_df = pd.concat(train_dfs + leftovers)
+
+    if val or return_3:
+        return train_df, val_df, test_df
+    return train_df, test_df
