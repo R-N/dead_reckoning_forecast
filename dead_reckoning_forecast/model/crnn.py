@@ -66,6 +66,10 @@ class CRNN(nn.Module):
             self.activation,
         )
         self.rnn = RNN(input_size=d_rnn, hidden_size=d_rnn, batch_first=True)
+        self.final_0 = nn.Sequential(
+            nn.Linear(d_rnn, d_rnn),
+            self.activation
+        )
         self.final_i = nn.Sequential(
             nn.Linear(d_rnn, d_rnn),
             self.activation
@@ -101,22 +105,29 @@ class CRNN(nn.Module):
         x = torch.cat([x, frames], dim=-1)
         x = self.adapter_n(x)
     
-        x, h = self.rnn(x)
+        x_0 = x[:, 1:, :] if b else x[1:, :]
 
-        print(type(h))
+        x, h = self.rnn(x)
+        x = x + self.final_0(x)
+
+        x_1 = x[:, :-1, :] if b else x[:-1, :]
 
         x, h = take_last(x, b), take_last(x, h)
+        
 
         preds = []
         for i in range(self.horizon):
             x, h = self.rnn(x, h)
             x, h = take_last(x, b), take_last(x, h)
-            x = x + self.final_i(x)
-            x = self.final_n(x)
-            preds.append(x)
+            x = x + self.final_0(x)
+            preds.append(x.squeeze(-2))
 
-        pred = torch.stack(preds)
-        return pred
+        pred = torch.stack(preds, dim=-2)
+
+        x = x + self.final_i(x)
+        x = self.final_n(x)
+
+        return pred, (x_0, x_1)
         
 def take_last(x, b):
     if isinstance(x, tuple):

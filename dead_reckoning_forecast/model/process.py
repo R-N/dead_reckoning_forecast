@@ -20,10 +20,16 @@ def train_epoch(model, loader, loss_fn, opt, val=False):
         if not val:
             opt.zero_grad()
         
-        pred = model(x, frames)
+        pred, (x_0, x_1) = model(x, frames)
         loss = loss_fn(pred, y)
+        internal_loss = loss_fn(x_1, x_0)
+        internal_loss = torch.mean(internal_loss, dim=-2)
+
+        print(loss.shape, internal_loss.shape)
 
         loss = loss * w
+
+        loss = loss + internal_loss
         
         if not val:
             loss.backward()
