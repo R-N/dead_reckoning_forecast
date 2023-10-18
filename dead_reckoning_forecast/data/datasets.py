@@ -23,8 +23,8 @@ class TimeSeriesDataset(Dataset):
         return (len(self.df) - self.y_len)//self.stride
 
     def __getitem__(self, index):
-        if hasattr(idx, "__iter__"):
-            return stack_samples([self[i] for i in idx])
+        if hasattr(index, "__iter__"):
+            return stack_samples([self[i] for i in index])
         index = index * self.stride
         x = self.df.iloc[index:index+self.x_len].loc[:, self.x_cols]
         y = self.df.iloc[index+self.x_len:index+self.x_len+self.y_len].loc[:, self.y_cols]
@@ -38,7 +38,6 @@ class FrameDataset(Dataset):
         self.frame_dir = frame_dir  
         self.transform = transform
         ext = f".{ext}" if not ext.startswith(".") else ext
-        print(frame_dir, ext)
         self.count = count or len(glob.glob1(frame_dir, f"*{ext}"))
         self.ext = ext
 
