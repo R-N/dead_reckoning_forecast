@@ -27,11 +27,13 @@ def remake_dir(path):
 
 def stack_samples(samples):
     samples = list(zip(*samples))
-    samples = [torch.stack(x) for x in samples]
+    samples = [torch.stack(x) if x[0] is not None else None for x in samples]
     return samples
 
 def to_tensor(x, Tensor=Tensor):
     if not Tensor:
+        return x
+    if x is None:
         return x
     if isinstance(x, tuple):
         return tuple([to_tensor(a, Tensor) for a in x])
