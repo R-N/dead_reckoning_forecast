@@ -10,9 +10,10 @@ class CRNN(nn.Module):
         cnn, 
         d_state=12,
         d_out=2, 
-        d_cnn=960, 
+        d_cnn_0=576,
+        d_cnn=64, 
         d_adapt=16,
-        d_rnn=256, 
+        d_rnn=256,
         RNN=nn.GRU, 
         activation=nn.ReLU, 
         size_cnn=(7, 7), 
@@ -28,7 +29,7 @@ class CRNN(nn.Module):
         #d_cnn_1 = d_cnn-960
         #"""
         self.cnn_1 = nn.Sequential(
-            nn.Conv2d(960, d_cnn, 3, padding=1),
+            nn.Conv2d(d_cnn_0, d_cnn, 3, padding=1),
             self.activation,
             nn.BatchNorm2d(d_cnn),
             self.do,
