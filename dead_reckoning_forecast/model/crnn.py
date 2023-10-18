@@ -14,6 +14,7 @@ class CRNN(nn.Module):
         d_cnn=64, 
         d_adapt=16,
         d_rnn=256,
+        horizon=10,
         RNN=nn.GRU, 
         activation=nn.ReLU, 
         size_cnn=(7, 7), 
@@ -74,6 +75,7 @@ class CRNN(nn.Module):
             self.activation_final,
         )
         #self.take = torch.LongTensor([-1])
+        self.horizon=horizon
         self.device = device
         self.to(device)
         
@@ -101,8 +103,19 @@ class CRNN(nn.Module):
     
         x, h = self.rnn(x)
 
-        #x = x[:, -1, :] if b else x[-1, :]
-        x = x + self.final_i(x)
-        x = self.final_n(x)
-        return x
+        x, h = take_last(x, b), take_last(x, h)
+
+        preds = []
+        for i in range(self.horizon):
+            x, h = self.rnn(x, h)
+            x, h = take_last(x, b), take_last(x, h)
+            x = x + self.final_i(x)
+            x = self.final_n(x)
+            preds.append(x)
+
+        pred = torch.stack(preds)
+        return pred
         
+def take_last(x, b):
+    x = x[:, -1, :] if b else x[-1, :]
+    return x
