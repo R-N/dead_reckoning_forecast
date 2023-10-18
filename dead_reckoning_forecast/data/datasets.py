@@ -203,7 +203,8 @@ class MultiChannelFrameDataset(BaseDataset):
         
         
 class TimeSeriesFrameDataset(BaseDataset):   
-    def __init__(self, ts_dataset, frame_dataset):
+    def __init__(self, ts_dataset, frame_dataset, max_cache=None):
+        super().__init__(max_cache=max_cache)
         self.ts_dataset = ts_dataset
         self.frame_dataset = frame_dataset
 
