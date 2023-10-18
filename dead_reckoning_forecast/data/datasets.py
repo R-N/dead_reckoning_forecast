@@ -100,6 +100,7 @@ class SubDataset(WrapperDataset):
         return len(self.index_)
     
     def get(self, idx, val=None):
+        print("subdataset call0", val, self.val)
         val = self.val if val is None else val
         print("subdataset call", val, self.val)
         return self.dataset.get(self.index[idx], val=val)
