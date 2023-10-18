@@ -103,6 +103,8 @@ class CRNN(nn.Module):
     
         x, h = self.rnn(x)
 
+        print(type(h))
+
         x, h = take_last(x, b), take_last(x, h)
 
         preds = []
