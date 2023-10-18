@@ -1,17 +1,21 @@
 import torch
+from torch import nn
+import torch.nn.functional as F
 from ..data.video import get_frames
 from ..util import array_to_image, show_video
 
-def train_epoch(model, loader, loss_fn, opt, val=False):
+def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, reduction=torch.linalg.vector_norm):
     if val:
         model.eval()
     else:
         model.train()
         
     avg_loss = 0
+    n = 0
 
     for i, batch in enumerate(loader):
-        x, frames, y, w = batch
+        x, frames, y, w, xy = batch
+        b = x.size(0)
         x = x.to(model.device)
         frames = frames.to(model.device)
         y = y.to(model.device)
@@ -20,16 +24,25 @@ def train_epoch(model, loader, loss_fn, opt, val=False):
         if not val:
             opt.zero_grad()
         
-        pred, (x_0, x_1) = model(x, frames)
+        pred, (x_0, x_1), xy_pred = model(x, frames)
         loss = loss_fn(pred, y)
-        internal_loss = loss_fn(x_1, x_0)
-        internal_loss = torch.mean(internal_loss, dim=-2)
+        internal_prediction_loss = loss_fn(x_1, x_0)
+        reconstruction_loss = loss_fn(xy_pred, xy)
 
-        print(loss.shape, internal_loss.shape)
+        print(loss.shape, w.shape, internal_prediction_loss.shape, reconstruction_loss.shape)
+
+
+        loss = reduction(loss, dim=-1)
+        internal_prediction_loss = reduction(internal_prediction_loss, dim=-1)
+        reconstruction_loss = reduction(reconstruction_loss, dim=-1)
 
         loss = loss * w
+        loss = torch.sum(loss, dim=-1) #this is 1 because it has been normed, this is sum because it's weighted sum
+        internal_prediction_loss = torch.mean(internal_prediction_loss, dim=-1) #this is 1 because it has been normed
+        reconstruction_loss = torch.mean(reconstruction_loss, dim=-1) #this is 1 because it has been normed
 
-        loss = loss + internal_loss
+        loss = loss + internal_prediction_loss + reconstruction_loss
+        loss = torch.sum(loss, dim=-1) # this should result in 0 dim tensor
         
         if not val:
             loss.backward()
@@ -38,8 +51,10 @@ def train_epoch(model, loader, loss_fn, opt, val=False):
         loss = loss.item()
         #print(f"Step loss: {loss}")
         avg_loss += loss
+
+        n += b
         
-    avg_loss /= (i+1)
+    avg_loss /= n
     
     ret = {
         "avg_loss": avg_loss,

@@ -95,7 +95,7 @@ class SubDataset(WrapperDataset):
         return self.dataset[self.index[idx]]
 
 class TimeSeriesDataset(BaseDataset):   
-    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None):
+    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None, val=True):
         super().__init__(max_cache=max_cache)
         self.df = df
         assert x_len > 0 and y_len > 0
@@ -104,6 +104,7 @@ class TimeSeriesDataset(BaseDataset):
         self.x_cols = x_cols or list(df.columns)
         self.y_cols = y_cols or list(df.columns)
         self.stride = stride
+        self.val = val
 
     def __len__(self):
         return (len(self.df) - self.y_len)//self.stride
@@ -116,12 +117,15 @@ class TimeSeriesDataset(BaseDataset):
             return self.cache[idx]
     
         idx = idx * self.stride
-        x = self.df.iloc[idx:idx+self.x_len].loc[:, self.x_cols]
+
+        x_stop = (idx+self.x_len) if self.val else (idx+self.x_len+self.y_len-1)
+        x = self.df.iloc[idx:x_stop].loc[:, self.x_cols]
         y = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len].loc[:, self.y_cols]
         w = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"].copy()
         w /= list(range(1, self.y_len+1))
+        xy = None if self.val else self.df.iloc[idx:x_stop].loc[:, self.y_cols]
 
-        sample = x, y, w
+        sample = x, y, w, xy
 
         if self.cache:
             self.cache[idx] = sample
@@ -198,3 +202,28 @@ class MultiChannelFrameDataset(BaseDataset):
 
         return frame
         
+        
+class TimeSeriesFrameDataset(BaseDataset):   
+    def __init__(self, ts_dataset, frame_dataset):
+        self.ts_dataset = ts_dataset
+        self.frame_dataset = frame_dataset
+
+    def __len__(self):
+        return len(self.ts_dataset)
+
+    def __getitem__(self, idx):
+        if hasattr(idx, "__iter__"):
+            return torch.stack([self[i] for i in idx])
+        
+        if self.cache and idx in self.cache:
+            return self.cache[idx]
+
+        x, y, w, xy = self.ts_dataset[idx]
+        frames = self.frame_dataset[x.index]
+        
+        sample =  x, frames, y, w, xy
+
+        if self.cache:
+            self.cache[idx] = sample
+
+        return sample

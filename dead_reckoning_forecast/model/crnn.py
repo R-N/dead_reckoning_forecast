@@ -18,6 +18,7 @@ class CRNN(nn.Module):
         RNN=nn.GRU, 
         activation=nn.ReLU, 
         size_cnn=(7, 7), 
+        activation_adapter_final=nn.Tanh,
         activation_final=nn.Tanh,
         device=DEFAULT_DEVICE
     ):
@@ -25,6 +26,7 @@ class CRNN(nn.Module):
         self.cnn = cnn
         self.do = nn.Dropout(0.2)
         self.activation = activation()
+        self.activation_adapter_final = activation_adapter_final()
         self.activation_final = activation_final()
         
         #d_cnn_1 = d_cnn-960
@@ -63,7 +65,7 @@ class CRNN(nn.Module):
         )
         self.adapter_n = nn.Sequential(
             nn.Linear(d_cnn+d_adapt, d_rnn),
-            self.activation,
+            self.activation_adapter_final,
         )
         self.rnn = RNN(input_size=d_rnn, hidden_size=d_rnn, batch_first=True)
         self.final_0 = nn.Sequential(
@@ -107,27 +109,38 @@ class CRNN(nn.Module):
     
         x_0 = x[:, 1:, :] if b else x[1:, :]
 
+        xy = None
+
+        if True:
+            xy = x
+            xy = xy + self.final_0(xy)
+            xy = xy + self.final_i(xy)
+            xy = self.final_n(xy)
+
         x, h = self.rnn(x)
         x = x + self.final_0(x)
 
         x_1 = x[:, :-1, :] if b else x[:-1, :]
 
-        x, h = take_last(x, b), take_last(x, h)
         
-
-        preds = []
-        for i in range(self.horizon):
-            x, h = self.rnn(x, h)
+        if self.training:
+            x = x[:, -self.horizon:, :] if b else x[-self.horizon:, :]
+        else:
             x, h = take_last(x, b), take_last(x, h)
-            x = x + self.final_0(x)
+            preds = []
             preds.append(x.squeeze(-2))
+            for i in range(self.horizon-1):
+                x, h = self.rnn(x, h)
+                x, h = take_last(x, b), take_last(x, h)
+                x = x + self.final_0(x)
+                preds.append(x.squeeze(-2))
 
-        pred = torch.stack(preds, dim=-2)
+            x = torch.stack(preds, dim=-2)
 
         x = x + self.final_i(x)
         x = self.final_n(x)
 
-        return pred, (x_0, x_1)
+        return x, (x_0, x_1), xy
         
 def take_last(x, b):
     if isinstance(x, tuple):
