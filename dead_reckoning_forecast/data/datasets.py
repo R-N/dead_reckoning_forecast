@@ -2,11 +2,10 @@
 import glob
 from torch.utils.data import Dataset
 from PIL import Image
-from dead_reckoning_forecast.util import remake_dir, stack_samples, to_tensor, DEFAULT_DEVICE
 import torch
 from torch.utils.data import Dataset
 from .. import constants
-from ..util import Cache, split_df_ratio, split_df_kfold
+from ..util import Cache, split_df_ratio, split_df_kfold, to_tensor, stack_samples
 import os
 import pandas as pd
 import numpy as np
@@ -220,6 +219,11 @@ class TimeSeriesFrameDataset(BaseDataset):
 
         x, y, w, xy = self.ts_dataset[idx]
         frames = self.frame_dataset[x.index]
+    
+        x = to_tensor(x)
+        y = to_tensor(y)
+        w = to_tensor(w)
+        xy = to_tensor(xy)
         
         sample =  x, frames, y, w, xy
 
