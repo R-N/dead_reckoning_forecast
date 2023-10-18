@@ -12,8 +12,9 @@ import numpy as np
 import gc
 
 class BaseDataset(Dataset):
-    def __init__(self, max_cache=None, **cache_kwargs):
+    def __init__(self, max_cache=None, val=True, **cache_kwargs):
         self.create_cache(max_cache, **cache_kwargs)
+        self.val = val
 
     def create_cache(self, max_cache, **cache_kwargs):
         if hasattr(self, "max_cache") and self.max_cache == max_cache:
@@ -56,10 +57,14 @@ class BaseDataset(Dataset):
         splits = split_df_kfold(index, **kwargs)
         splits = [[SubDataset(self, i) for i in datasets] for datasets in splits]
         return splits
+    
+    def get(self, idx, val=None):
+        return self[idx]
+    
 
 class WrapperDataset(BaseDataset):
-    def __init__(self, dataset, max_cache=None):
-        super().__init__(max_cache=max_cache)
+    def __init__(self, dataset, max_cache=None, val=True):
+        super().__init__(max_cache=max_cache, val=val)
         self.dataset = dataset
 
     @property
@@ -70,12 +75,16 @@ class WrapperDataset(BaseDataset):
         return len(self.dataset)
     
     def __getitem__(self, idx):
-        return self.dataset[idx]
+        return self.get(idx)
+    
+    def get(self, idx, val=None):
+        val = self.val if val is None else val
+        return self.dataset.get(idx, val=val)
 
 
 class SubDataset(WrapperDataset):
-    def __init__(self, dataset, index, max_cache=None):
-        super().__init__(dataset=dataset, max_cache=max_cache)
+    def __init__(self, dataset, index, max_cache=None, val=True):
+        super().__init__(dataset=dataset, max_cache=max_cache, val=val)
         if isinstance(index, pd.Series) or isinstance(index, pd.Index):
             index = index.to_numpy()
         if not isinstance(index, np.ndarray):
@@ -89,13 +98,14 @@ class SubDataset(WrapperDataset):
 
     def __len__(self):
         return len(self.index_)
-
-    def __getitem__(self, idx):
-        return self.dataset[self.index[idx]]
+    
+    def get(self, idx, val=None):
+        val = self.val if val is None else val
+        return self.dataset.get(self.index[idx], val=val)
 
 class TimeSeriesDataset(BaseDataset):   
     def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None, val=True):
-        super().__init__(max_cache=max_cache)
+        super().__init__(max_cache=max_cache, val=val)
         self.df = df
         assert x_len > 0 and y_len > 0
         self.x_len = x_len
@@ -103,15 +113,14 @@ class TimeSeriesDataset(BaseDataset):
         self.x_cols = x_cols or list(df.columns)
         self.y_cols = y_cols or list(df.columns)
         self.stride = stride
-        self.val = val
-
-    def set_val(self, val):
-        self.val = val
 
     def __len__(self):
         return (len(self.df) - self.y_len)//self.stride
 
     def __getitem__(self, idx):
+        return self.get(idx)
+
+    def get(self, idx, val=None):
         if hasattr(idx, "__iter__"):
             return stack_samples([self[i] for i in idx])
         
@@ -119,14 +128,14 @@ class TimeSeriesDataset(BaseDataset):
             return self.cache[idx]
     
         idx = idx * self.stride
+        val = self.val if val is None else val
 
-        x_stop = (idx+self.x_len) if self.val else (idx+self.x_len+self.y_len-1)
+        x_stop = (idx+self.x_len) if val else (idx+self.x_len+self.y_len-1)
         x = self.df.iloc[idx:x_stop].loc[:, self.x_cols]
         y = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len].loc[:, self.y_cols]
         w = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"].copy()
         w /= list(range(1, self.y_len+1))
-        xy = None if self.val else self.df.iloc[idx:x_stop].loc[:, self.y_cols]
-        print(self.val, xy is None)
+        xy = None if val else self.df.iloc[idx:x_stop].loc[:, self.y_cols]
 
         sample = x, y, w, xy
 
@@ -137,8 +146,8 @@ class TimeSeriesDataset(BaseDataset):
     
 
 class FrameDataset(BaseDataset):
-    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None):
-        super().__init__(max_cache=max_cache)
+    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None, val=True):
+        super().__init__(max_cache=max_cache, val=val)
         self.frame_dir = frame_dir  
         self.transform = transform
         ext = f".{ext}" if not ext.startswith(".") else ext
@@ -171,8 +180,8 @@ class FrameDataset(BaseDataset):
     
     
 class MultiChannelFrameDataset(BaseDataset):
-    def __init__(self, frame_dir, channels=constants.channels, max_cache=None, **kwargs):
-        super().__init__(max_cache=max_cache)
+    def __init__(self, frame_dir, channels=constants.channels, max_cache=None, val=True, **kwargs):
+        super().__init__(max_cache=max_cache, val=val)
         self.channels = channels
         self.transform = None
         self.dataset_dict = {
@@ -207,23 +216,28 @@ class MultiChannelFrameDataset(BaseDataset):
         
         
 class TimeSeriesFrameDataset(BaseDataset):   
-    def __init__(self, ts_dataset, frame_dataset, max_cache=None):
-        super().__init__(max_cache=max_cache)
+    def __init__(self, ts_dataset, frame_dataset, max_cache=None, val=True):
+        super().__init__(max_cache=max_cache, val=val)
         self.ts_dataset = ts_dataset
         self.frame_dataset = frame_dataset
 
     def __len__(self):
         return len(self.ts_dataset)
-
+    
     def __getitem__(self, idx):
+        return self.get(idx)
+
+    def get(self, idx, val=None):
         if hasattr(idx, "__iter__"):
             return torch.stack([self[i] for i in idx])
         
         if self.cache and idx in self.cache:
             return self.cache[idx]
 
-        x, y, w, xy = self.ts_dataset[idx]
-        frames = self.frame_dataset[x.index]
+        val = self.val if val is None else val
+
+        x, y, w, xy = self.ts_dataset.get(idx, val=val)
+        frames = self.frame_dataset.get(x.index, val=val)
     
         x = to_tensor(x)
         y = to_tensor(y)
