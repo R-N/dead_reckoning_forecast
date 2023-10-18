@@ -7,6 +7,7 @@ from torchvision.models._utils import _ovewrite_named_param
 from torchvision.ops.misc import Conv2dNormActivation
 from ..util import DEFAULT_DEVICE
 from functools import partial
+from typing import Sequence
 
 def create_firstconv(in_channel, out_channel, norm_layer=None):
     return Conv2dNormActivation(
@@ -130,8 +131,9 @@ def _mobilenet_v3(
     
     conv = model.features
 
-    for param in model.parameters():
-        param.requires_grad = not freeze
+    for m in list(model.children()):
+        for param in model.parameters():
+            param.requires_grad = not freeze
 
     firstconv = create_firstconv(
         in_channel=in_channel, 
