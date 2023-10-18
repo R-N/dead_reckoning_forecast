@@ -32,7 +32,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
             internal_prediction_loss = loss_fn(x_1, x_0)
             reconstruction_loss = loss_fn(xy_pred, xy)
 
-        print(loss.shape, w.shape, internal_prediction_loss.shape, reconstruction_loss.shape)
+        #print(loss.shape, w.shape, internal_prediction_loss.shape, reconstruction_loss.shape)
 
 
         loss = reduction(loss, dim=-1)
@@ -60,7 +60,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
         n += b
 
-        print("Finished batch", loss)
+        #print("Finished batch", loss)
 
         gc.collect()
         
