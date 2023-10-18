@@ -2,6 +2,7 @@ from torch import nn
 import torch
 import torch.functional as F
 import math
+from ..util import DEFAULT_DEVICE
 
 class CRNN(nn.Module):
     def __init__(
@@ -15,7 +16,8 @@ class CRNN(nn.Module):
         RNN=nn.GRU, 
         activation=nn.ReLU, 
         size_cnn=(7, 7), 
-        activation_final=nn.Tanh
+        activation_final=nn.Tanh,
+        device=DEFAULT_DEVICE
     ):
         super().__init__()
         self.cnn = cnn
@@ -71,6 +73,8 @@ class CRNN(nn.Module):
             self.activation_final,
         )
         #self.take = torch.LongTensor([-1])
+        self.device = device
+        self.to(device)
         
     def forward(self, x, frames):
 
