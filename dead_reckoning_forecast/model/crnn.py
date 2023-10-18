@@ -121,8 +121,6 @@ class CRNN(nn.Module):
         x = x + self.final_0(x)
 
         x_1 = x[:, :-1, :] if b else x[:-1, :]
-
-        print(x.shape, h[0].shape, h[1].shape)
         
         if self.training:
             x = x[:, -self.horizon:, :] if b else x[-self.horizon:, :]
@@ -131,7 +129,6 @@ class CRNN(nn.Module):
             preds = []
             preds.append(x.squeeze(-2))
             for i in range(self.horizon-1):
-                print(x.shape, h[0].shape, h[1].shape)
                 x, h = self.rnn(x, h)
                 x, h = take_last_rnn(x, h, b)
                 x = x + self.final_0(x)
