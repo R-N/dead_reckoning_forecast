@@ -1,6 +1,6 @@
 import torchvision.transforms as transforms
 
-def create_transformer(img_size, mean_std=None, aug=False):
+def create_transformer(img_size=(224,224), mean_std=None, aug=False):
     augmentations = []
     if aug:
         augmentations = [
