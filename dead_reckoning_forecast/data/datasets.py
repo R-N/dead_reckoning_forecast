@@ -94,8 +94,9 @@ class SubDataset(WrapperDataset):
     def __getitem__(self, idx):
         return self.dataset[self.index[idx]]
 
-class TimeSeriesDataset(Dataset):   
-    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1):
+class TimeSeriesDataset(BaseDataset):   
+    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None):
+        super().__init__(max_cache=max_cache)
         self.df = df
         assert x_len > 0 and y_len > 0
         self.x_len = x_len
@@ -107,19 +108,30 @@ class TimeSeriesDataset(Dataset):
     def __len__(self):
         return (len(self.df) - self.y_len)//self.stride
 
-    def __getitem__(self, index):
-        if hasattr(index, "__iter__"):
-            return stack_samples([self[i] for i in index])
-        index = index * self.stride
-        x = self.df.iloc[index:index+self.x_len].loc[:, self.x_cols]
-        y = self.df.iloc[index+self.x_len:index+self.x_len+self.y_len].loc[:, self.y_cols]
-        w = self.df.iloc[index+self.x_len:index+self.x_len+self.y_len]["weight"].copy()
+    def __getitem__(self, idx):
+        if hasattr(idx, "__iter__"):
+            return stack_samples([self[i] for i in idx])
+        
+        if self.cache and idx in self.cache:
+            return self.cache[idx]
+    
+        idx = idx * self.stride
+        x = self.df.iloc[idx:idx+self.x_len].loc[:, self.x_cols]
+        y = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len].loc[:, self.y_cols]
+        w = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"].copy()
         w /= list(range(1, self.y_len+1))
-        return x, y, w
+
+        sample = x, y, w
+
+        if self.cache:
+            self.cache[idx] = sample
+
+        return sample
     
 
 class FrameDataset(Dataset):
-    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0):    
+    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None):
+        super().__init__(max_cache=max_cache)
         self.frame_dir = frame_dir  
         self.transform = transform
         ext = f".{ext}" if not ext.startswith(".") else ext
@@ -133,7 +145,10 @@ class FrameDataset(Dataset):
         if hasattr(idx, "__iter__"):
             return stack_samples([self[i] for i in idx])
         
-        frame_name = f"{idx+1}.jpg"
+        if self.cache and idx in self.cache:
+            return self.cache[idx]
+        
+        frame_name = f"{idx+1}{self.ext}"
         img_path = os.path.join(self.frame_dir, frame_name)
 
         frame = Image.open(img_path)
@@ -142,11 +157,15 @@ class FrameDataset(Dataset):
         
         #frame = to_tensor(frame, torch.Tensor)
 
+        if self.cache:
+            self.cache[idx] = frame
+
         return frame
     
     
 class MultiChannelFrameDataset(Dataset):
-    def __init__(self, frame_dir, channels=constants.channels, **kwargs):
+    def __init__(self, frame_dir, channels=constants.channels, max_cache=None, **kwargs):
+        super().__init__(max_cache=max_cache)
         self.channels = channels
         self.transform = None
         self.dataset_dict = {
@@ -164,11 +183,18 @@ class MultiChannelFrameDataset(Dataset):
     def __getitem__(self, idx):
         if hasattr(idx, "__iter__"):
             return stack_samples([self[i] for i in idx])
+        
+        if self.cache and idx in self.cache:
+            return self.cache[idx]
+
         channels = [d[idx] for d in self.dataset_list]
         frame = torch.cat(channels, dim=0)
         
         if self.transform:
             frame = self.transform(frame)
+
+        if self.cache:
+            self.cache[idx] = frame
 
         return frame
         
