@@ -1,7 +1,7 @@
 from torch import nn
 import torch
 import torchvision.models as models
-from torchvision.models.mobilenetv3 import InvertedResidualConfig, InvertedResidual, _mobilenet_v3_conf
+from torchvision.models.mobilenetv3 import InvertedResidualConfig, InvertedResidual, _mobilenet_v3_conf, MobileNet_V3_Small_Weights
 from torchvision.utils import _log_api_usage_once
 from torchvision.models._utils import _ovewrite_named_param
 from torchvision.ops.misc import Conv2dNormActivation
@@ -157,5 +157,6 @@ def _mobilenet_v3(
 def mobilenet_v3_small(
     *, in_channel=3, weights=None, progress=True, **kwargs
 ):
+    weights = MobileNet_V3_Small_Weights.verify(weights)
     inverted_residual_setting, last_channel = _mobilenet_v3_conf("mobilenet_v3_small", **kwargs)
     return _mobilenet_v3(inverted_residual_setting, last_channel, weights, progress, in_channel=in_channel, **kwargs)
