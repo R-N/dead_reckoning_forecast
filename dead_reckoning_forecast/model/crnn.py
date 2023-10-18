@@ -122,6 +122,7 @@ class CRNN(nn.Module):
 
         x_1 = x[:, :-1, :] if b else x[:-1, :]
 
+        print(x.shape, h[0].shape, h[1].shape)
         
         if self.training:
             x = x[:, -self.horizon:, :] if b else x[-self.horizon:, :]
