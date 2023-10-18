@@ -118,7 +118,7 @@ class TimeSeriesDataset(BaseDataset):
         self.stride = stride
 
     def __len__(self):
-        return (len(self.df) - self.y_len)//self.stride
+        return (len(self.df) - self.x_len - self.y_len)//self.stride
 
     def __getitem__(self, idx):
         return self.get(idx)
