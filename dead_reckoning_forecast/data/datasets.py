@@ -129,7 +129,7 @@ class TimeSeriesDataset(BaseDataset):
         return sample
     
 
-class FrameDataset(Dataset):
+class FrameDataset(BaseDataset):
     def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None):
         super().__init__(max_cache=max_cache)
         self.frame_dir = frame_dir  
@@ -163,7 +163,7 @@ class FrameDataset(Dataset):
         return frame
     
     
-class MultiChannelFrameDataset(Dataset):
+class MultiChannelFrameDataset(BaseDataset):
     def __init__(self, frame_dir, channels=constants.channels, max_cache=None, **kwargs):
         super().__init__(max_cache=max_cache)
         self.channels = channels
