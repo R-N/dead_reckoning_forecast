@@ -117,5 +117,5 @@ class CRNN(nn.Module):
         return pred
         
 def take_last(x, b):
-    x = x[:, -1, :] if b else x[-1, :]
+    x = x[:, -1:, :] if b else x[-1:, :]
     return x
