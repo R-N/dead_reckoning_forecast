@@ -130,6 +130,7 @@ class CRNN(nn.Module):
             preds = []
             preds.append(x.squeeze(-2))
             for i in range(self.horizon-1):
+                print(x.shape, h[0].shape, h[1].shape)
                 x, h = self.rnn(x, h)
                 x, h = take_last(x, b), take_last(h, b)
                 x = x + self.final_0(x)
