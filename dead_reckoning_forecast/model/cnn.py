@@ -1,6 +1,8 @@
 from torch import nn
+import torch
 import torchvision.models as models
 from ..util import DEFAULT_DEVICE
+from .mobile_net import mobilenet_v3_small
 
 class MobileNet(nn.Module):
     INPUT_SIZE = (224, 224)
@@ -16,5 +18,12 @@ class MobileNet(nn.Module):
         model = list(model.children())[0]
         for param in model.parameters():
             param.requires_grad = not freeze
+        model = model.to(device)
+        return model
+    
+    @staticmethod
+    def get_custom(in_channel=4, device=DEFAULT_DEVICE):
+        model = mobilenet_v3_small(in_channel=in_channel)
+        model = list(model.children())[0]
         model = model.to(device)
         return model
