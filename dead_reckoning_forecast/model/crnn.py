@@ -117,5 +117,7 @@ class CRNN(nn.Module):
         return pred
         
 def take_last(x, b):
+    if isinstance(x, tuple):
+        return [take_last(xi, b) for xi in x]
     x = x[:, -1:, :] if b else x[-1:, :]
     return x
