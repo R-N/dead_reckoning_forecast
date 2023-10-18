@@ -22,6 +22,8 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         frames = frames.to(model.device)
         y = y.to(model.device)
         w = w.to(model.device)
+        if not test:
+            xy = xy.to(model.device)
 
         if not val:
             opt.zero_grad()
