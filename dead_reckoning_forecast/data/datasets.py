@@ -75,7 +75,7 @@ class WrapperDataset(BaseDataset):
         return len(self.dataset)
     
     def __getitem__(self, idx):
-        return self.get(idx)
+        return self.get(idx, val=None)
     
     def get(self, idx, val=None):
         val = self.val if val is None else val
@@ -98,6 +98,9 @@ class SubDataset(WrapperDataset):
 
     def __len__(self):
         return len(self.index_)
+    
+    def __getitem__(self, idx):
+        return self.get(idx, val=None)
     
     def get(self, idx, val=None):
         print("subdataset call0", val, self.val)
