@@ -103,9 +103,7 @@ class SubDataset(WrapperDataset):
         return self.get(idx, val=None)
     
     def get(self, idx, val=None):
-        print("subdataset call0", val, self.val)
         val = self.val if val is None else val
-        print("subdataset call", val, self.val)
         return self.dataset.get(self.index[idx], val=val)
 
 class TimeSeriesDataset(BaseDataset):   
@@ -134,8 +132,6 @@ class TimeSeriesDataset(BaseDataset):
     
         idx = idx * self.stride
         val = self.val if val is None else val
-
-        print("timeseries call", val, self.val)
 
         x_stop = (idx+self.x_len) if val else (idx+self.x_len+self.y_len-1)
         x = self.df.iloc[idx:x_stop].loc[:, self.x_cols]
