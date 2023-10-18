@@ -6,8 +6,93 @@ from dead_reckoning_forecast.util import remake_dir, stack_samples, to_tensor, D
 import torch
 from torch.utils.data import Dataset
 from .. import constants
+from ..util import Cache, split_df_ratio, split_df_kfold
 import os
+import pandas as pd
+import numpy as np
+import gc
 
+class BaseDataset(Dataset):
+    def __init__(self, max_cache=None, **cache_kwargs):
+        self.create_cache(max_cache, **cache_kwargs)
+
+    def create_cache(self, max_cache, **cache_kwargs):
+        if hasattr(self, "max_cache") and self.max_cache == max_cache:
+            return
+        if max_cache == True:
+            max_cache = torch.inf
+        self.max_cache = max_cache
+        self.cache = Cache(max_cache, **cache_kwargs) if max_cache else None
+
+    @property
+    def index(self):
+        return list(range(len(self)))
+
+    def clear_cache(self):
+        if self.cache:
+            self.cache.clear()
+            gc.collect()
+
+    def slice(self, start=0, stop=None, step=1):
+        index = pd.Series(self.index)
+        stop = stop or (len(index)-1)
+        sample = index[start:stop:step]
+        dataset = SubDataset(self, sample)
+        return dataset
+
+    def sample(self, **kwargs):
+        index = pd.Series(self.index)
+        sample = index.sample(**kwargs)
+        dataset = SubDataset(self, sample)
+        return dataset
+
+    def split_ratio(self, **kwargs):
+        index = pd.Series(self.index)
+        datasets = split_df_ratio(index, **kwargs)
+        datasets = [SubDataset(self, i) for i in datasets]
+        return datasets
+
+    def split_kfold(self, **kwargs):
+        index = pd.Series(self.index)
+        splits = split_df_kfold(index, **kwargs)
+        splits = [[SubDataset(self, i) for i in datasets] for datasets in splits]
+        return splits
+
+class WrapperDataset(BaseDataset):
+    def __init__(self, dataset, max_cache=None):
+        super().__init__(max_cache=max_cache)
+        self.dataset = dataset
+
+    @property
+    def index(self):
+        return self.dataset.index
+
+    def __len__(self):
+        return len(self.dataset)
+    
+    def __getitem__(self, idx):
+        return self.dataset[idx]
+
+
+class SubDataset(WrapperDataset):
+    def __init__(self, dataset, index, max_cache=None):
+        super().__init__(dataset=dataset, max_cache=max_cache)
+        if isinstance(index, pd.Series) or isinstance(index, pd.Index):
+            index = index.to_numpy()
+        if not isinstance(index, np.ndarray):
+            index = np.array(index)
+        index = index.astype(int)
+        self.index_ = index
+
+    @property
+    def index(self):
+        return self.index_
+
+    def __len__(self):
+        return len(self.index_)
+
+    def __getitem__(self, idx):
+        return self.dataset[self.index[idx]]
 
 class TimeSeriesDataset(Dataset):   
     def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1):
