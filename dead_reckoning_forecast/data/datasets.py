@@ -105,6 +105,9 @@ class TimeSeriesDataset(BaseDataset):
         self.stride = stride
         self.val = val
 
+    def set_val(self, val):
+        self.val = val
+
     def __len__(self):
         return (len(self.df) - self.y_len)//self.stride
 
