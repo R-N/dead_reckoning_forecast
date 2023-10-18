@@ -32,4 +32,5 @@ class MobileNet(nn.Module):
         model = mobilenet_v3_small(in_channel=in_channel, weights=weights, freeze=freeze)
         model = model.features
         model = model.to(device)
+        model.device = device
         return model
