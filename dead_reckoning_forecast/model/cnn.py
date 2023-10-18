@@ -9,8 +9,11 @@ class MobileNet(nn.Module):
     MEAN = [0.485, 0.456, 0.406]
     STD = [0.229, 0.224, 0.225]
 
-    MEAN_2 = 4*[sum(MEAN)/3]
-    STD_2 = 4*[sum(STD)/3]
+    MEAN_1 = [sum(MEAN)/3]
+    STD_1 = [sum(STD)/3]
+
+    MEAN_4 = 4*MEAN_1
+    STD_4 = 4*STD_1
 
     def __init__(self):
         super().__init__()
