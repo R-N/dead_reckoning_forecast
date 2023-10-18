@@ -64,7 +64,7 @@ class CRNN(nn.Module):
             nn.Linear(d_cnn+d_adapt, d_rnn),
             self.activation,
         )
-        self.rnn = RNN(input_size=d_cnn+d_adapt, hidden_size=d_rnn, batch_first=True)
+        self.rnn = RNN(input_size=d_rnn, hidden_size=d_rnn, batch_first=True)
         self.final_i = nn.Sequential(
             nn.Linear(d_rnn, d_rnn),
             self.activation
