@@ -1,0 +1,10 @@
+moviepy==1.0.3
+ffmpeg==1.4
+torch
+torchvision
+torchinfo
+opencv-python
+numpy
+scikit-learn
+pandas
+matplotlib
