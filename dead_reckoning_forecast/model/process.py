@@ -91,4 +91,11 @@ def test_infer_video(model, label_encoder, transformer, file_info):
     pred = infer_video(model, label_encoder, file_path)
     print(file_path, "pred", pred, "==" if pred == label else "!=", label)
     return show_video(file_path)
-    
+
+def infer(model, x, frames):
+    x = x.to(model.device)
+    frames = frames.to(model.device)
+    pred, *_ = model(x, frames)
+    pred = pred.detach().cpu().numpy()
+    return pred
+
