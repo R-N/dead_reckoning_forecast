@@ -154,13 +154,13 @@ def take_last_rnn(x, h, b):
     
 def permute_batch(x, b):
     if isinstance(x, tuple):
-        return [permute_batch(xi, b) for xi in x]
+        return tuple([permute_batch(xi, b) for xi in x])
     if b:
         return x.permute(-2, -3, -1)
     return x
         
 def take_last(x, b):
     if isinstance(x, tuple):
-        return [take_last(xi, b) for xi in x]
+        return  tuple([take_last(xi, b) for xi in x])
     x = x[:, -1:, :] if b else x[-1:, :]
     return x
