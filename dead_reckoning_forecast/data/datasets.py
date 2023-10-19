@@ -149,7 +149,7 @@ class TimeSeriesDataset(BaseDataset):
     
     def total_y_weight(self, idx):
         if hasattr(idx, "__iter__"):
-            return [self[i] for i in idx]
+            return [self.total_y_weight(i) for i in idx]
         idx = idx * self.stride
         x_stop = (idx+self.x_len) 
         yw = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"]
@@ -165,7 +165,7 @@ class TimeSeriesDataset(BaseDataset):
     
     def total_weight(self, idx):
         if hasattr(idx, "__iter__"):
-            return [self[i] for i in idx]
+            return [self.total_weight(i) for i in idx]
         idx = idx * self.stride
         x_stop = (idx+self.x_len) 
         xw = self.df.iloc[idx:x_stop]["weight"]
