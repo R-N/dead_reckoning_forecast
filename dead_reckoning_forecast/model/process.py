@@ -78,7 +78,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
         n += b
 
-        print("batch", loss/b, avg_prediction_loss/b, internal_prediction_loss/b, reconstruction_loss/b)
+        print("batch", loss/b, prediction_loss/b, internal_prediction_loss/b, reconstruction_loss/b)
 
         gc.collect()
         
