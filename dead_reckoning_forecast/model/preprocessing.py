@@ -32,6 +32,10 @@ class Normalizer:
         self.negative_dash = negative_dash
         
     def fit(self, df):
+        dash_enabled = None
+        delta_mag = 0
+        enemy_mag = 0
+
         if self.dash_enabled is None and "dash_enabled" in df.columns:
             dash_enabled = bool(df.iloc[-1]["dash_enabled"])
             
