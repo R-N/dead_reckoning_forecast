@@ -62,7 +62,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         loss = prediction_loss + internal_prediction_loss + reconstruction_loss
         
         if not val:
-            loss.backward()
+            (loss/b).backward() # take batch mean
             opt.step()
         
         loss = loss.item()
