@@ -33,8 +33,19 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
         base = plot_prediction__(ax, pred[i], color=color, base=base)
     return pred.shape[0]
 
-def plot_prediction(pred, y=None, pred_color="blue", y_color="orange"):
+def plot_image_(ax, x):
+    ax.imshow(x, extent=[
+        -x.shape[1]/2., 
+        x.shape[1]/2., 
+        -x.shape[0]/2.,
+        x.shape[0]/2.
+    ])
+
+def plot_prediction(pred, y=None, pred_color="blue", y_color="orange", img=None):
     fig, ax = plt.subplots()
+
+    if img is not None:
+        plot_image_(ax, img)
 
     ax.plot([0], [0], marker="o", markersize=10, markeredgecolor="black", markerfacecolor="white")
     
