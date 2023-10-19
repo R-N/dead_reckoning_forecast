@@ -10,8 +10,16 @@ def combine_frame_channels(in_dir, out_dir, channels=constants.channels, ext=".p
     transform = transforms.Compose([
         transforms.ToTensor(),
     ])
-    ds = MultiChannelFrameDataset(in_dir, transform=transform)
+    ds = MultiChannelFrameDataset(in_dir, channels=channels, transform=transform)
     print(len(ds))
     for i in range(len(ds)):
         img = ds[i]
         save_image(img, os.path.join(out_dir, f"{i+1}{ext}"))
+
+def combine_frame_channels_2(data_dir, frame_dir, match_type, match_id, player):
+    match_id = str(match_id)
+    player = str(player)
+    match_dir = os.path.join(data_dir, match_type, match_id)
+    in_dir = os.path.join(match_dir, player)
+    out_dir = os.path.join(frame_dir, match_type, match_id, player, "all")
+    combine_frame_channels(in_dir, out_dir)

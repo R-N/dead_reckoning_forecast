@@ -57,3 +57,18 @@ def combine_player_states(self_states, enemy_states, match_type, self_attrs=cons
     #states = normalizer.transform(states)
     #states = remove_leading_trailing_zeros(states)
     return states
+
+
+def load_dataset(data_dir, match_type, match_id, player):
+    match_id = str(match_id)
+    player = str(player)
+    enemy = "2" if player == "1" else "1"
+    
+    match_dir = os.path.join(data_dir, match_type, match_id)
+    
+    self_states = read_states(match_dir, player, match_type)
+    enemy_states = read_states(match_dir, enemy, match_type)
+
+    self_states1 = combine_player_states(self_states, enemy_states, match_type)
+    
+    return self_states1
