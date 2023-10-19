@@ -26,13 +26,13 @@ def add_weights(df):
     df.loc[hurt, "weight"] += 1
     return df
 
-def read_states(match_dir, player, match_type):
+def read_states(match_dir, player, match_type, negative_dash=False):
     path = os.path.join(match_dir, str(player), "states.csv")
     df = pd.read_csv(path, index_col=0)[1:]#.copy()
     df[np.isclose(df, 0)] = 0
     dash_enabled = "dash" in match_type
     df["dash_enabled"] = 1 if dash_enabled else 0
-    if not dash_enabled:
+    if (not dash_enabled) and negative_dash:
         if "dash_cooldown" in df.columns:
             df["dash_cooldown"] = -1
         if "dash" in df.columns:

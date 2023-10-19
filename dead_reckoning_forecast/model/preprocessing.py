@@ -20,7 +20,7 @@ def create_transformer(img_size=(224,224), mean_std=None, aug=False):
     ])
 
 class Normalizer:
-    def __init__(self, dash_enabled=None, delta_mag=0, enemy_mag=0):
+    def __init__(self, dash_enabled=None, delta_mag=0, enemy_mag=0, negative_dash=False):
         self.dash_enabled = dash_enabled
         self.dash_cooldown = 2
         self.dash_length = 10
@@ -29,6 +29,7 @@ class Normalizer:
         self.delta_mag = delta_mag
         self.enemy_mag = enemy_mag
         self.n = 0
+        self.negative_dash = negative_dash
         
     def fit(self, df):
         if self.dash_enabled is None and "dash_enabled" in df.columns:
@@ -66,7 +67,7 @@ class Normalizer:
         
         df = df.copy()
 
-        if dash_enabled:
+        if dash_enabled or not self.negative_dash:
             df["dash_cooldown"] /= self.dash_cooldown
             df["dash"] /= self.dash_length
 
@@ -88,7 +89,7 @@ class Normalizer:
         
         df = df.copy()
 
-        if dash_enabled:
+        if dash_enabled or not self.negative_dash:
             if "dash_cooldown" in df.columns:
                 df["dash_cooldown"] *= self.dash_cooldown
             if "dash" in df.columns:
