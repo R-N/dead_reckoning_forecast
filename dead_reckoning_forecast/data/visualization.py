@@ -33,11 +33,11 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
 def plot_prediction(pred, y=None, pred_color="blue", y_color="orange"):
     fig, ax = plt.subplots()
     
-    plot_prediction(ax, pred, color=pred_color)
+    plot_prediction_(ax, pred, color=pred_color)
     axes = ["prediction"]
     
     if y is not None:
-        plot_prediction(ax, y, color=y_color)
+        plot_prediction_(ax, y, color=y_color)
         axes.append("ground_truth")
     
     ax.legend(axes)
