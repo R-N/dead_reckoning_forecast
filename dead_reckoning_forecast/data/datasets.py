@@ -138,7 +138,8 @@ class TimeSeriesDataset(BaseDataset):
         y = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len].loc[:, self.y_cols]
         w = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"].copy()
         w /= list(range(1, self.y_len+1))
-        xy = None if val else self.df.iloc[idx:x_stop].loc[:, self.y_cols]
+        #xy = None if val else self.df.iloc[idx:x_stop].loc[:, self.y_cols]
+        xy = self.df.iloc[idx:x_stop].loc[:, self.y_cols]
 
         sample = x, y, w, xy
 
