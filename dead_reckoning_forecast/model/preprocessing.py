@@ -36,17 +36,15 @@ class Normalizer:
         delta_mag = 0
         enemy_mag = 0
 
-        if self.dash_enabled is None and "dash_enabled" in df.columns:
+        if "dash_enabled" in df.columns:
             dash_enabled = bool(df.iloc[-1]["dash_enabled"])
             
-        if self.delta_mag is None:
-            if "last_movement_x" in df.columns:
-                delta_mag = max(max_vector_magnitude(df[constants.last_movements]), max_vector_magnitude(df[constants.deltas]))
-            else:
-                delta_mag = max_vector_magnitude(df[constants.deltas])
-        if self.enemy_mag is None:
-            if "enemy_relative_position_x" in df.columns:
-                enemy_mag = max_vector_magnitude(df[constants.enemy_positions])
+        if "last_movement_x" in df.columns:
+            delta_mag = max(max_vector_magnitude(df[constants.last_movements]), max_vector_magnitude(df[constants.deltas]))
+        else:
+            delta_mag = max_vector_magnitude(df[constants.deltas])
+        if "enemy_relative_position_x" in df.columns:
+            enemy_mag = max_vector_magnitude(df[constants.enemy_positions])
 
         n = len(df)
 
