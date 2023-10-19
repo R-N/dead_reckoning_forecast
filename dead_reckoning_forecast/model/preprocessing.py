@@ -20,7 +20,7 @@ def create_transformer(img_size=(224,224), mean_std=None, aug=False):
     ])
 
 class Normalizer:
-    def __init__(self, dash_enabled=None, delta_mag=None, enemy_mag=None):
+    def __init__(self, dash_enabled=None, delta_mag=0, enemy_mag=0):
         self.dash_enabled = dash_enabled
         self.dash_cooldown = 2
         self.dash_length = 10
@@ -28,19 +28,28 @@ class Normalizer:
         self.max_bullets = 5
         self.delta_mag = delta_mag
         self.enemy_mag = enemy_mag
+        self.n = 0
         
     def fit(self, df):
         if self.dash_enabled is None and "dash_enabled" in df.columns:
-            self.dash_enabled = bool(df.iloc[-1]["dash_enabled"])
+            dash_enabled = bool(df.iloc[-1]["dash_enabled"])
             
         if self.delta_mag is None:
             if "last_movement_x" in df.columns:
-                self.delta_mag = max(max_vector_magnitude(df[constants.last_movements]), max_vector_magnitude(df[constants.deltas]))
+                delta_mag = max(max_vector_magnitude(df[constants.last_movements]), max_vector_magnitude(df[constants.deltas]))
             else:
-                self.delta_mag = max_vector_magnitude(df[constants.deltas])
+                delta_mag = max_vector_magnitude(df[constants.deltas])
         if self.enemy_mag is None:
             if "enemy_relative_position_x" in df.columns:
-                self.enemy_mag = max_vector_magnitude(df[constants.enemy_positions])
+                enemy_mag = max_vector_magnitude(df[constants.enemy_positions])
+
+        n = len(df)
+
+        self.dash_enabled = self.dash_enabled if not dash_enabled else True
+        self.delta_mag = max(self.delta_mag, delta_mag)
+        self.enemy_mag = max(self.enemy_mag, enemy_mag)
+        self.n += n
+
             
     def get_dash_enabled(self, df, dash_enabled=None):
         if dash_enabled is None:
