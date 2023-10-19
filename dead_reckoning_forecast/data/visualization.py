@@ -33,13 +33,15 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
         base = plot_prediction__(ax, pred[i], color=color, base=base)
     return pred.shape[0]
 
-def plot_image_(ax, x):
+def plot_image_(ax, x, permute=True):
+    if permute:
+        img = img.permute(-2, -1, -3)
     ax.imshow(x, extent=[
         -x.shape[1]/2., 
         x.shape[1]/2., 
         -x.shape[0]/2.,
         x.shape[0]/2.
-    ])
+    ], cmap="gray")
 
 def plot_prediction(pred, y=None, pred_color="blue", y_color="orange", img=None):
     fig, ax = plt.subplots()
