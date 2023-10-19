@@ -27,7 +27,7 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
     if len(pred.shape) == 2:
         pred = np.expand_dims(pred, axis=0)
     for i in range(pred.shape[0]):
-        base = plot_prediction(ax, pred[i], color=color, base=base)
+        base = plot_prediction__(ax, pred[i], color=color, base=base)
     return base
 
 def plot_prediction(pred, y=None, pred_color="blue", y_color="orange"):
