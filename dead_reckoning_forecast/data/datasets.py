@@ -147,6 +147,51 @@ class TimeSeriesDataset(BaseDataset):
 
         return sample
     
+    def total_y_weight(self, idx):
+        if hasattr(idx, "__iter__"):
+            return [self[i] for i in idx]
+        idx = idx * self.stride
+        x_stop = (idx+self.x_len) 
+        yw = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"]
+        yw = yw.sum()
+        return yw
+    
+    @property
+    def non_constant_y_index(self):
+        idx = self.index
+        weights = self.total_y_weight(idx)
+        idx = [i for i, w in zip(idx, weights) if w > self.y_len]
+        return idx
+    
+    def total_weight(self, idx):
+        if hasattr(idx, "__iter__"):
+            return [self[i] for i in idx]
+        idx = idx * self.stride
+        x_stop = (idx+self.x_len) 
+        xw = self.df.iloc[idx:x_stop]["weight"]
+        yw = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"]
+        w = xw.sum() + yw.sum()
+        return w
+    
+    @property
+    def non_constant_index(self):
+        idx = self.index
+        weights = self.total_weight(idx)
+        idx = [i for i, w in zip(idx, weights) if w > (self.x_len + self.y_len)]
+        return idx
+
+    @property
+    def non_constant_y_subset(self):
+        index = pd.Series(self.non_constant_y_index)
+        dataset = SubDataset(self, index)
+        return dataset
+
+    @property
+    def non_constant_subset(self):
+        index = pd.Series(self.non_constant_index)
+        dataset = SubDataset(self, index)
+        return dataset
+    
 
 class FrameDataset(BaseDataset):
     def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None, val=None):
