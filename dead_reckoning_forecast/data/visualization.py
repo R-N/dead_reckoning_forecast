@@ -10,7 +10,7 @@ def plot_frame(img, channels=constants.channels, permute=True):
     for i in range(img.shape[-1]):
         imgi = img[:, :, i]
         ax = axs[i//2, i%2]
-        ax.imshow(imgi)
+        ax.imshow(imgi, cmap="gray")
         ax.set_title(channels[i])
     return fig
 
