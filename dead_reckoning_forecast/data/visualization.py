@@ -15,16 +15,29 @@ def plot_frame(img, channels=constants.channels, permute=True):
     return fig
 
 
-def plot_prediction(pred, y=None):
+
+def plot_prediction__(ax, pred, color="blue", base=np.array([0, 0])):
+    pred = np.cumsum(pred, axis=0)
+    pred += base
+    ax.plot(pred[:, 0], pred[:, 1], color=color, linestyle="dashed")
+    base = pred[0]
+    return base
+
+def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
+    if len(pred.shape) == 2:
+        pred = np.expand_dims(pred, axis=0)
+    for i in range(pred.shape[0]):
+        base = plot_prediction(ax, pred[i], color=color, base=base)
+    return base
+
+def plot_prediction(pred, y=None, pred_color="blue", y_color="orange"):
     fig, ax = plt.subplots()
     
-    pred = np.cumsum(pred, axis=0)
-    ax.plot(pred[:, 0], pred[:, 1])
+    plot_prediction(ax, pred, color=pred_color)
     axes = ["prediction"]
     
     if y is not None:
-        y = np.cumsum(pred, axis=0)
-        ax.plot(y[:, 0], y[:, 1])
+        plot_prediction(ax, y, color=y_color)
         axes.append("ground_truth")
     
     ax.legend(axes)
