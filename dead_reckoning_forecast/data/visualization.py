@@ -19,6 +19,7 @@ def plot_frame(img, channels=constants.channels, permute=True):
 def plot_prediction__(ax, pred, color="blue", base=np.array([0, 0])):
     pred = np.cumsum(pred, axis=0)
     pred += base
+    pred = np.insert(pred, 0, base, axis=0)
     x, y = (pred[:, 0], pred[:, 1])
     ax.plot([x[0]], [y[0]], marker="o", markersize=10, markeredgecolor="black", markerfacecolor=color)
     ax.plot(x, y, color=color, linestyle="dashed")
@@ -34,6 +35,8 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
 
 def plot_prediction(pred, y=None, pred_color="blue", y_color="orange"):
     fig, ax = plt.subplots()
+
+    ax.plot([0], [0], marker="o", markersize=10, markeredgecolor="black", markerfacecolor="white")
     
     n_pred = plot_prediction_(ax, pred, color=pred_color)
     #axes = n_pred * ["prediction"] 
