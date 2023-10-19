@@ -115,6 +115,10 @@ def test_infer_video(model, label_encoder, transformer, file_info):
     return show_video(file_path)
 
 def infer(model, x, frames):
+    if x.dim() == 2:
+        x = x.unsqueeze(0)
+    if frames.dim() == 4:
+        frames = frames.unsqueeze(0)
     x = x.to(model.device)
     frames = frames.to(model.device)
     pred, *_ = model(x, frames)
