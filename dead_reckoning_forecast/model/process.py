@@ -5,6 +5,8 @@ from ..data.video import get_frames
 from ..util import array_to_image, show_video
 import gc
 from .metrics import mape, mse
+import numpy as np
+import math
 
 def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm):
     val = val or test
@@ -98,8 +100,10 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
     preds = torch.stack(preds)
     ys = torch.stack(ys)
 
-    rmse_ = torch.sqrt(torch.mean(mse(preds, ys, dim=-2))).item()
-    wrmse_ = torch.sqrt(torch.mean(mse(preds, ys, weights=True, dim=-2))).item()
+    mse_ = torch.mean(mse(preds, ys, dim=-2)).item()
+    wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
+    rmse_ = math.sqrt(mse_)
+    wrmse_ = math.sqrt(wrmse_)
     mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
     wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
@@ -112,6 +116,8 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         "wmape": wmape_,
         "rmse": rmse_,
         "wrmse": wrmse_,
+        "mse": mse_,
+        "wmse": wmse_,
     }
         
     return ret
@@ -147,15 +153,53 @@ def infer(model, x, frames):
 
 def eval(model, x, frames, y):
     pred = infer(model, x, frames)
-    rmse_ = torch.sqrt(torch.mean(mse(pred, y, dim=-2))).item()
-    wrmse_ = torch.sqrt(torch.mean(mse(pred, y, weights=True, dim=-2))).item()
-    mape_ = torch.mean(mape(pred, y, dim=-2)).item()
-    wmape_ = torch.mean(mape(pred, y, weights=True, dim=-2)).item()
+    preds, ys = pred, y
+    mse_ = torch.mean(mse(preds, ys, dim=-2)).item()
+    wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
+    rmse_ = math.sqrt(mse_)
+    wrmse_ = math.sqrt(wrmse_)
+    mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
+    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
     ret = {
         "mape": mape_,
         "wmape": wmape_,
         "rmse": rmse_,
         "wrmse": wrmse_,
+        "mse": mse_,
+        "wmse": wmse_,
+    }
+    return ret
+
+def eval_2(model, loader):
+    preds = []
+    ys = []
+
+    for i, batch in enumerate(loader):
+        x, frames, y, *_ = batch
+        ys.extend(y.detach().cpu())
+        x = x.to(model.device)
+        frames = frames.to(model.device)
+        pred, *_ = model(x, frames)
+        pred = pred.detach().cpu().numpy()
+        preds.extend(pred.detach().cpu())
+
+    preds = torch.stack(preds)
+    ys = torch.stack(ys)
+
+    mse_ = torch.mean(mse(preds, ys, dim=-2)).item()
+    wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
+    rmse_ = math.sqrt(mse_)
+    wrmse_ = math.sqrt(wrmse_)
+    mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
+    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
+    
+    ret = {
+        "mape": mape_,
+        "wmape": wmape_,
+        "rmse": rmse_,
+        "wrmse": wrmse_,
+        "mse": mse_,
+        "wmse": wmse_,
     }
     return ret
