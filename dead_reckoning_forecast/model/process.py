@@ -140,7 +140,7 @@ def test_infer_video(model, label_encoder, transformer, file_info):
     print(file_path, "pred", pred, "==" if pred == label else "!=", label)
     return show_video(file_path)
 
-def infer(model, x, frames):
+def infer(model, x, frames, normalizer=None):
     if x.dim() == 2:
         x = x.unsqueeze(0)
     if frames.dim() == 4:
@@ -149,16 +149,16 @@ def infer(model, x, frames):
     frames = frames.to(model.device)
     pred, *_ = model(x, frames)
     pred = pred.detach().cpu().numpy()
+    if normalizer:
+        pred *= normalizer.delta_mag
     return pred
 
 def infer_test(model, x, frames, y=None, normalizer=None):
-    pred = infer(model, x, frames)
+    pred = infer(model, x, frames, normalizer=normalizer)
     if torch.istensor(y):
         y = y.detach().cpu().numpy()
-    if normalizer:
-        pred *= normalizer.delta_mag
-        if y is not None:
-            y *= normalizer.delta_mag
+    if normalizer and y is not None:
+        y *= normalizer.delta_mag
     return pred, y
 
 def eval(model, x, frames, y):
