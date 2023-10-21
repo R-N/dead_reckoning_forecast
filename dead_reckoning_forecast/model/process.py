@@ -182,7 +182,6 @@ def eval_2(model, loader):
         x = x.to(model.device)
         frames = frames.to(model.device)
         pred, *_ = model(x, frames)
-        pred = pred.detach().cpu().numpy()
         preds.extend(pred.detach().cpu())
 
     preds = torch.stack(preds)
