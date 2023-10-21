@@ -25,10 +25,6 @@ class BaseDataset(Dataset):
             max_cache = torch.inf
         self.max_cache = max_cache
 
-        size = str(self.size)
-        if size not in cache_dir:
-            cache_dir = os.path.join(cache_dir, size)
-
         self.cache = Cache(max_cache=max_cache, cache_dir=cache_dir, **kwargs) if max_cache else None
 
     @property
