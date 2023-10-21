@@ -100,11 +100,11 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
     preds = torch.stack(preds)
     ys = torch.stack(ys)
 
-    mse_ = torch.mean(mse(preds, ys, dim=-2)).item()
+    mse_ = torch.mean(mse(preds, ys, weights=False, dim=-2)).item()
     wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
     rmse_ = math.sqrt(mse_)
     wrmse_ = math.sqrt(wmse_)
-    mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
+    mape_ = torch.mean(mape(preds, ys, weights=False, dim=-2)).item()
     wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
     ret = {
@@ -154,11 +154,12 @@ def infer(model, x, frames):
 def eval(model, x, frames, y):
     pred = infer(model, x, frames)
     preds, ys = pred, y
-    mse_ = torch.mean(mse(preds, ys, dim=-2)).item()
+
+    mse_ = torch.mean(mse(preds, ys, weights=False, dim=-2)).item()
     wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
     rmse_ = math.sqrt(mse_)
     wrmse_ = math.sqrt(wmse_)
-    mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
+    mape_ = torch.mean(mape(preds, ys, weights=False, dim=-2)).item()
     wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
     ret = {
@@ -187,11 +188,11 @@ def eval_2(model, loader):
     preds = torch.stack(preds)
     ys = torch.stack(ys)
 
-    mse_ = torch.mean(mse(preds, ys, dim=-2)).item()
+    mse_ = torch.mean(mse(preds, ys, weights=False, dim=-2)).item()
     wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
     rmse_ = math.sqrt(mse_)
     wrmse_ = math.sqrt(wmse_)
-    mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
+    mape_ = torch.mean(mape(preds, ys, weights=False, dim=-2)).item()
     wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
     ret = {
