@@ -143,7 +143,7 @@ def infer(model, x, frames, normalizer=None):
 
 def infer_test(model, x, frames, y=None, normalizer=None):
     pred = infer(model, x, frames, normalizer=normalizer)
-    if torch.istensor(y):
+    if torch.is_tensor(y):
         y = y.detach().cpu().numpy()
     if normalizer and y is not None:
         y *= normalizer.delta_mag
