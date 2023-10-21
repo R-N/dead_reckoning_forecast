@@ -12,17 +12,24 @@ import numpy as np
 import gc
 
 class BaseDataset(Dataset):
-    def __init__(self, max_cache=None, val=None, **cache_kwargs):
-        self.create_cache(max_cache, **cache_kwargs)
+    def __init__(self, max_cache=None, val=None, **kwargs):
         self.val = val
+        self.create_cache(max_cache=max_cache, **kwargs)
 
-    def create_cache(self, max_cache, **cache_kwargs):
-        if hasattr(self, "max_cache") and self.max_cache == max_cache:
+    def create_cache(self, max_cache=None, cache_dir="_cache", force=False, **kwargs):
+        if not force and hasattr(self, "max_cache") and self.max_cache == max_cache:
             return
+        if max_cache is None and hasattr(self, "max_cache"):
+            max_cache == self.max_cache
         if max_cache == True:
             max_cache = torch.inf
         self.max_cache = max_cache
-        self.cache = Cache(max_cache, **cache_kwargs) if max_cache else None
+
+        size = str(self.size)
+        if size not in cache_dir:
+            cache_dir = os.path.join(cache_dir, size)
+
+        self.cache = Cache(max_cache=max_cache, cache_dir=cache_dir, **kwargs) if max_cache else None
 
     @property
     def index(self):
@@ -30,7 +37,7 @@ class BaseDataset(Dataset):
 
     def clear_cache(self):
         if self.cache:
-            self.cache.clear()
+            self.create_cache(force=True)
             gc.collect()
 
     def slice(self, start=0, stop=None, step=1):
