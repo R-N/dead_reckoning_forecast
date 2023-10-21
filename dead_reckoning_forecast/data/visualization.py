@@ -21,6 +21,7 @@ def plot_prediction__(ax, pred, color="blue", base=np.array([0, 0])):
     pred += base
     #pred = np.insert(pred, 0, base, axis=0)
     x, y = (pred[:, 0], pred[:, 1])
+    ax.plot([base[0], x[0]], [base[1], y[0]], color=color, linestyle="dashed")
     ax.plot([x[0]], [y[0]], marker="o", markersize=10, markeredgecolor="black", markerfacecolor=color)
     ax.plot(x, y, color=color, linestyle="dashed")
     base = pred[0]
