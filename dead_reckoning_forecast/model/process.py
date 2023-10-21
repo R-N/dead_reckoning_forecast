@@ -7,6 +7,7 @@ import gc
 from .metrics import mape, mse
 import numpy as np
 import math
+import time
 
 def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm, normalizer=None):
     val = val or test
@@ -150,13 +151,26 @@ def infer_test(model, x, frames, y=None, normalizer=None):
     return pred, y
 
 def eval(model, x, frames, y, normalizer=None):
+    
+    start_time = time.time()
+
     pred = infer(model, x, frames)
+    
+    end_time = time.time()
+    duration = (end_time-start_time)
+
     preds, ys = pred, y
-    return calc_metrics(preds, ys, normalizer=normalizer)
+    return {
+        **calc_metrics(preds, ys, normalizer=normalizer),
+        "duration": duration,
+        "duration_per_data": duration/pred.shape[0]
+    }
 
 def eval_2(model, loader, normalizer=None):
     preds = []
     ys = []
+    
+    start_time = time.time()
 
     for i, batch in enumerate(loader):
         x, frames, y, *_ = batch
@@ -168,8 +182,15 @@ def eval_2(model, loader, normalizer=None):
 
     preds = torch.stack(preds)
     ys = torch.stack(ys)
+    
+    end_time = time.time()
+    duration = (end_time-start_time)
 
-    return calc_metrics(preds, ys, normalizer=normalizer)
+    return {
+        **calc_metrics(preds, ys, normalizer=normalizer),
+        "duration": duration,
+        "duration_per_data": duration/preds.shape[0]
+    }
 
 def calc_metrics(preds, ys, normalizer=None):
     
