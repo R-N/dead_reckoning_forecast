@@ -14,7 +14,7 @@ def get_weights(length, weights=True, dim=-1):
 
     return weights
 
-def rmse(pred, y, weights=True, dim=-1):
+def mse(pred, y, weights=True, dim=-1):
     weights = get_weights(y.size(-2), weights=weights, dim=dim)
     
     se = F.mse_loss(pred, y, reduction="none")
