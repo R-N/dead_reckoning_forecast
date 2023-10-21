@@ -24,7 +24,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
     for i, batch in enumerate(loader):
         x, frames, y, w, xy = batch
-        ys.append(y.detach().cpu())
+        ys.extend(y.detach().cpu())
         b = x.size(0)
         x = x.to(model.device)
         frames = frames.to(model.device)
@@ -86,7 +86,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         print("batch", loss/b, prediction_loss/b, internal_prediction_loss/b, reconstruction_loss/b)
 
         preds.extend(pred.detach().cpu())
-        ys.extend(y.detach().cpu())
+        #ys.extend(y.detach().cpu())
 
         gc.collect()
         
