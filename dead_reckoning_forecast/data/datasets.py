@@ -307,11 +307,11 @@ class TimeSeriesFrameDataset(BaseDataset):
 
         return sample
 
-def create_ts_frame_dataset(ts_dataset, frame_dir, match_type, match_id, player, transformer=None):
+def create_ts_frame_dataset(ts_dataset, frame_dir, match_type, match_id, player, transformer=None, **kwargs):
     match_id = str(match_id)
     player = str(player)
     combined_frame_dir = os.path.join(frame_dir, match_type, match_id, player, "all")
     frames = FrameDataset(combined_frame_dir, transform=transformer, ext=".png")
-    dataset = TimeSeriesFrameDataset(ts_dataset, frames)
+    dataset = TimeSeriesFrameDataset(ts_dataset, frames, **kwargs)
     return dataset
     

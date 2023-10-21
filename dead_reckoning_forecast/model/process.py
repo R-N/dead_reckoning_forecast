@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from ..data.video import get_frames
 from ..util import array_to_image, show_video
 import gc
+from .metrics import mape
 
 def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm):
     val = val or test
@@ -18,8 +19,12 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
     avg_reconstruction_loss = 0
     n = 0
 
+    preds = []
+    ys = []
+
     for i, batch in enumerate(loader):
         x, frames, y, w, xy = batch
+        ys.append(y.detach().cpu())
         b = x.size(0)
         x = x.to(model.device)
         frames = frames.to(model.device)
@@ -80,18 +85,28 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
         print("batch", loss/b, prediction_loss/b, internal_prediction_loss/b, reconstruction_loss/b)
 
+        preds.extend(pred.detach().cpu())
+        preds.extend(pred.detach().cpu())
+
         gc.collect()
         
     avg_loss /= n
     avg_prediction_loss /= n
     avg_internal_prediction_loss /= n
     avg_reconstruction_loss /= n
+
+    preds = torch.stack(preds)
+    ys = torch.stack(ys)
+    mape_ = torch.mean(mape(preds, ys, dim=-2))
+    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2))
     
     ret = {
         "avg_loss": avg_loss,
         "avg_prediction_loss": avg_prediction_loss,
         "avg_internal_prediction_loss": avg_internal_prediction_loss,
         "avg_reconstruction_loss": avg_reconstruction_loss,
+        "mape": mape_,
+        "wmape": wmape_,
     }
         
     return ret
@@ -125,3 +140,13 @@ def infer(model, x, frames):
     pred = pred.detach().cpu().numpy()
     return pred
 
+def eval(model, x, frames, y):
+    pred = infer(model, x, frames)
+    mape_ = torch.mean(mape(pred, y, dim=-2))
+    wmape_ = torch.mean(mape(pred, y, weights=True, dim=-2))
+    
+    ret = {
+        "mape": mape_,
+        "wmape": wmape_,
+    }
+    return ret
