@@ -35,7 +35,7 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
 
 def plot_image_(ax, x, permute=True):
     if permute:
-        img = img.permute(-2, -1, -3)
+        x = x.permute(-2, -1, -3)
     ax.imshow(x, extent=[
         -x.shape[1]/2., 
         x.shape[1]/2., 
