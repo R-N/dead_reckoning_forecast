@@ -11,20 +11,6 @@ from pathlib import Path
 Tensor = torch.Tensor
 DEFAULT_DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
 
-def remake_dir(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    while os.path.exists(path):
-        pass
-    while True:
-        try:
-            os.makedirs(path, exist_ok=True)
-            if not os.path.exists(path):
-                continue
-            break
-        except PermissionError:
-            continue
-
 def stack_samples(samples):
     samples = list(zip(*samples))
     samples = [torch.stack(x) if x[0] is not None else None for x in samples]
@@ -74,11 +60,72 @@ def remove_leading_trailing_zeros(df, cols):
 
 remove_zeros = remove_leading_trailing_zeros
 
-class Cache:
-    def __init__(self, max_cache=None, remove_old=False):
+class CacheType:
+    MEMORY = "memory"
+    PICKLE = "pickle"
+
+    __ALL__ = (MEMORY, PICKLE)
+
+
+def Cache(cache_type=CacheType.MEMORY, max_cache=None, **kwargs):
+    if not max_cache:
+        return None
+    if cache_type == CacheType.MEMORY:
+        return InMemoryCache(max_cache=max_cache, **kwargs)
+    elif cache_type == CacheType.PICKLE:
+        return PickleCache(max_cache=max_cache, **kwargs)
+
+def remake_dir(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    while os.path.exists(path):
+        pass
+    while True:
+        try:
+            mkdir(path)
+            if not os.path.exists(path):
+                continue
+            break
+        except PermissionError:
+            continue
+
+class PickleCache:
+    def __init__(self, max_cache=torch.inf, remove_old=False, cache_dir="_cache", clear_first=False):
+        assert cache_dir is not None
+        self.remove_old = remove_old
+        if clear_first:
+            remake_dir(cache_dir)
+        else:
+            mkdir(cache_dir)
+        self.cache_dir = cache_dir
+        print("Caching in", cache_dir, max_cache, remove_old)
+
+    def clear(self):
+        remake_dir(self.cache_dir)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        if hasattr(idx, "__iter__"):
+            return stack_samples([self[id] for id in idx])
+        sample = torch.load(self.file_path(idx))
+        return sample
+    
+    def __setitem__(self, idx, sample):
+        torch.save(sample, self.file_path(idx))
+
+    def __contains__(self, idx):
+        return os.path.exists(self.file_path(idx))
+    
+    def file_path(self, idx):
+        return os.path.join(self.cache_dir, f"_cache_{idx}.pt")
+
+class InMemoryCache:
+    def __init__(self, max_cache=torch.inf, remove_old=False, cache_dir=None, clear_first=False):
         self.max_cache = max_cache
         self.cache = OrderedDict()
         self.remove_old = remove_old
+        print("Caching in memory", max_cache, remove_old)
 
     def clear(self):
         self.cache.clear()
