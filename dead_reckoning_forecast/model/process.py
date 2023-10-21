@@ -85,7 +85,7 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
         n += b
 
-        print("batch", loss/b, prediction_loss/b, internal_prediction_loss/b, reconstruction_loss/b)
+        #print("batch", loss/b, prediction_loss/b, internal_prediction_loss/b, reconstruction_loss/b)
 
         preds.extend(pred.detach().cpu())
         #ys.extend(y.detach().cpu())
