@@ -97,8 +97,8 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
     preds = torch.stack(preds)
     ys = torch.stack(ys)
-    mape_ = torch.mean(mape(preds, ys, dim=-2))
-    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2))
+    mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
+    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
     ret = {
         "avg_loss": avg_loss,
@@ -142,8 +142,8 @@ def infer(model, x, frames):
 
 def eval(model, x, frames, y):
     pred = infer(model, x, frames)
-    mape_ = torch.mean(mape(pred, y, dim=-2))
-    wmape_ = torch.mean(mape(pred, y, weights=True, dim=-2))
+    mape_ = torch.mean(mape(pred, y, dim=-2)).item()
+    wmape_ = torch.mean(mape(pred, y, weights=True, dim=-2)).item()
     
     ret = {
         "mape": mape_,
