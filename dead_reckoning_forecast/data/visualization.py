@@ -33,7 +33,7 @@ def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0]), repeat_first
         p = pred[i]
         if repeat_first:
             p = np.repeat(p[:1, :], len(p), axis=0)
-        base = plot_prediction__(ax, pred[i], color=color, base=base)
+        base = plot_prediction__(ax, p, color=color, base=base)
     return pred.shape[0]
 
 def plot_image_(ax, x, permute=True):
