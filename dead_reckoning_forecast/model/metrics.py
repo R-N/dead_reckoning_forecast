@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 def get_weights(y, weights=True, dim=-1):
-    if weights is None:
+    if weights is None or weights is False:
         weights = torch.ones(y.size(dim))
     if weights is True:
         weights = torch.Tensor([1/i for i in range(1, y.size(dim)+1)])
