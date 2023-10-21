@@ -151,6 +151,16 @@ def infer(model, x, frames):
     pred = pred.detach().cpu().numpy()
     return pred
 
+def infer_test(model, x, frames, y=None, normalizer=None):
+    pred = infer(model, x, frames)
+    if torch.istensor(y):
+        y = y.detach().cpu().numpy()
+    if normalizer:
+        pred *= normalizer.delta_mag
+        if y is not None:
+            y *= normalizer.delta_mag
+    return pred, y
+
 def eval(model, x, frames, y):
     pred = infer(model, x, frames)
     preds, ys = pred, y
