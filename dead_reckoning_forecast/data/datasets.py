@@ -66,8 +66,8 @@ class BaseDataset(Dataset):
     
 
 class WrapperDataset(BaseDataset):
-    def __init__(self, dataset, max_cache=None, val=None):
-        super().__init__(max_cache=max_cache, val=val)
+    def __init__(self, dataset, max_cache=None, val=None, **kwargs):
+        super().__init__(max_cache=max_cache, val=val, **kwargs)
         self.dataset = dataset
 
     @property
@@ -86,8 +86,8 @@ class WrapperDataset(BaseDataset):
 
 
 class SubDataset(WrapperDataset):
-    def __init__(self, dataset, index, max_cache=None, val=None):
-        super().__init__(dataset=dataset, max_cache=max_cache, val=val)
+    def __init__(self, dataset, index, max_cache=None, val=None, **kwargs):
+        super().__init__(dataset=dataset, max_cache=max_cache, val=val, **kwargs)
         if isinstance(index, pd.Series) or isinstance(index, pd.Index):
             index = index.to_numpy()
         if not isinstance(index, np.ndarray):
@@ -110,8 +110,8 @@ class SubDataset(WrapperDataset):
         return self.dataset.get(self.index[idx], val=val)
 
 class TimeSeriesDataset(BaseDataset):   
-    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None, val=None):
-        super().__init__(max_cache=max_cache, val=val)
+    def __init__(self, df, x_len=50, y_len=10, x_cols=None, y_cols=None, stride=1, max_cache=None, val=None, **kwargs):
+        super().__init__(max_cache=max_cache, val=val, **kwargs)
         self.df = df
         assert x_len > 0 and y_len > 0
         self.x_len = x_len
@@ -198,8 +198,8 @@ class TimeSeriesDataset(BaseDataset):
     
 
 class FrameDataset(BaseDataset):
-    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None, val=None):
-        super().__init__(max_cache=max_cache, val=val)
+    def __init__(self, frame_dir, transform=None, ext=".jpg", count=0, max_cache=None, val=None, **kwargs):
+        super().__init__(max_cache=max_cache, val=val, **kwargs)
         self.frame_dir = frame_dir  
         self.transform = transform
         ext = f".{ext}" if not ext.startswith(".") else ext
@@ -268,8 +268,8 @@ class MultiChannelFrameDataset(BaseDataset):
         
         
 class TimeSeriesFrameDataset(BaseDataset):   
-    def __init__(self, ts_dataset, frame_dataset, max_cache=None, val=None):
-        super().__init__(max_cache=max_cache, val=val)
+    def __init__(self, ts_dataset, frame_dataset, max_cache=None, val=None, **kwargs):
+        super().__init__(max_cache=max_cache, val=val, **kwargs)
         self.ts_dataset = ts_dataset
         self.frame_dataset = frame_dataset
 
