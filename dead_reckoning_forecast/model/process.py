@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from ..data.video import get_frames
 from ..util import array_to_image, show_video
 import gc
-from .metrics import mape
+from .metrics import mape, mse
 
 def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm):
     val = val or test
@@ -97,6 +97,9 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
     preds = torch.stack(preds)
     ys = torch.stack(ys)
+
+    rmse_ = torch.sqrt(torch.mean(mse(preds, ys, dim=-2))).item()
+    wrmse_ = torch.sqrt(torch.mean(mse(preds, ys, weights=True, dim=-2))).item()
     mape_ = torch.mean(mape(preds, ys, dim=-2)).item()
     wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
@@ -107,6 +110,8 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
         "avg_reconstruction_loss": avg_reconstruction_loss,
         "mape": mape_,
         "wmape": wmape_,
+        "rmse": rmse_,
+        "wrmse": wrmse_,
     }
         
     return ret
@@ -142,11 +147,15 @@ def infer(model, x, frames):
 
 def eval(model, x, frames, y):
     pred = infer(model, x, frames)
+    rmse_ = torch.sqrt(torch.mean(mse(pred, y, dim=-2))).item()
+    wrmse_ = torch.sqrt(torch.mean(mse(pred, y, weights=True, dim=-2))).item()
     mape_ = torch.mean(mape(pred, y, dim=-2)).item()
     wmape_ = torch.mean(mape(pred, y, weights=True, dim=-2)).item()
     
     ret = {
         "mape": mape_,
         "wmape": wmape_,
+        "rmse": rmse_,
+        "wrmse": wrmse_,
     }
     return ret
