@@ -8,7 +8,7 @@ from .metrics import mape, mse
 import numpy as np
 import math
 
-def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm):
+def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=False, test=False, reduction=torch.linalg.vector_norm, normalizer=None):
     val = val or test
     if val:
         model.eval()
@@ -99,25 +99,13 @@ def train_epoch(model, loader, opt, loss_fn=nn.MSELoss(reduction="none"), val=Fa
 
     preds = torch.stack(preds)
     ys = torch.stack(ys)
-
-    mse_ = torch.mean(mse(preds, ys, weights=False, dim=-2)).item()
-    wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
-    rmse_ = math.sqrt(mse_)
-    wrmse_ = math.sqrt(wmse_)
-    mape_ = torch.mean(mape(preds, ys, weights=False, dim=-2)).item()
-    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
     
     ret = {
         "avg_loss": avg_loss,
         "avg_prediction_loss": avg_prediction_loss,
         "avg_internal_prediction_loss": avg_internal_prediction_loss,
         "avg_reconstruction_loss": avg_reconstruction_loss,
-        "mape": mape_,
-        "wmape": wmape_,
-        "rmse": rmse_,
-        "wrmse": wrmse_,
-        "mse": mse_,
-        "wmse": wmse_,
+        **calc_metrics(preds, ys, normalizer=normalizer)
     }
         
     return ret
@@ -161,26 +149,10 @@ def infer_test(model, x, frames, y=None, normalizer=None):
         y *= normalizer.delta_mag
     return pred, y
 
-def eval(model, x, frames, y):
+def eval(model, x, frames, y, normalizer=None):
     pred = infer(model, x, frames)
     preds, ys = pred, y
-
-    mse_ = torch.mean(mse(preds, ys, weights=False, dim=-2)).item()
-    wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
-    rmse_ = math.sqrt(mse_)
-    wrmse_ = math.sqrt(wmse_)
-    mape_ = torch.mean(mape(preds, ys, weights=False, dim=-2)).item()
-    wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
-    
-    ret = {
-        "mape": mape_,
-        "wmape": wmape_,
-        "rmse": rmse_,
-        "wrmse": wrmse_,
-        "mse": mse_,
-        "wmse": wmse_,
-    }
-    return ret
+    return calc_metrics(preds, ys, normalizer=normalizer)
 
 def eval_2(model, loader):
     preds = []
@@ -197,13 +169,22 @@ def eval_2(model, loader):
     preds = torch.stack(preds)
     ys = torch.stack(ys)
 
+    return calc_metrics(preds, ys, normalizer=normalizer)
+
+def calc_metrics(preds, ys, normalizer=None):
+    
+    if normalizer:
+        preds = preds * normalizer.delta_mag
+        ys = ys * normalizer.delta_mag
+
     mse_ = torch.mean(mse(preds, ys, weights=False, dim=-2)).item()
     wmse_ = torch.mean(mse(preds, ys, weights=True, dim=-2)).item()
-    rmse_ = math.sqrt(mse_)
-    wrmse_ = math.sqrt(wmse_)
     mape_ = torch.mean(mape(preds, ys, weights=False, dim=-2)).item()
     wmape_ = torch.mean(mape(preds, ys, weights=True, dim=-2)).item()
-    
+
+    rmse_ = math.sqrt(mse_)
+    wrmse_ = math.sqrt(wmse_)
+
     ret = {
         "mape": mape_,
         "wmape": wmape_,
