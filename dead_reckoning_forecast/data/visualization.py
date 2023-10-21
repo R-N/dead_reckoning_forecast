@@ -26,10 +26,13 @@ def plot_prediction__(ax, pred, color="blue", base=np.array([0, 0])):
     base = pred[0]
     return base
 
-def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0])):
+def plot_prediction_(ax, pred, color="blue", base=np.array([0, 0]), repeat_first=False):
     if len(pred.shape) == 2:
         pred = np.expand_dims(pred, axis=0)
     for i in range(pred.shape[0]):
+        p = pred[i]
+        if repeat_first:
+            p = np.repeat(p[:1, :], len(p), axis=0)
         base = plot_prediction__(ax, pred[i], color=color, base=base)
     return pred.shape[0]
 
@@ -55,7 +58,7 @@ def plot_prediction(pred, y=None, pred_color="blue", y_color="orange", img=None)
     #axes = n_pred * ["prediction"] 
     
     if y is not None:
-        n_y = plot_prediction_(ax, y, color=y_color)
+        n_y = plot_prediction_(ax, y, color=y_color, repeat_first=True)
         #axes = axes + (n_y * ["ground_truth"])
     
     #ax.legend(axes)
