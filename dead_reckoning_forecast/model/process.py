@@ -154,7 +154,7 @@ def eval(model, x, frames, y, normalizer=None):
     preds, ys = pred, y
     return calc_metrics(preds, ys, normalizer=normalizer)
 
-def eval_2(model, loader):
+def eval_2(model, loader, normalizer=None):
     preds = []
     ys = []
 
