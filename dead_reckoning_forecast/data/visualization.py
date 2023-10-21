@@ -55,12 +55,12 @@ def plot_prediction(pred, y=None, pred_color="blue", y_color="orange", img=None,
 
     ax.plot([0], [0], marker="o", markersize=10, markeredgecolor="black", markerfacecolor="white")
     
-    n_pred = plot_prediction_(ax, pred, color=pred_color)
-    #axes = n_pred * ["prediction"] 
-    
     if y is not None:
         n_y = plot_prediction_(ax, y, color=y_color, repeat_first=repeat_first_y)
         #axes = axes + (n_y * ["ground_truth"])
+    
+    n_pred = plot_prediction_(ax, pred, color=pred_color)
+    #axes = n_pred * ["prediction"] 
     
     #ax.legend(axes)
     
