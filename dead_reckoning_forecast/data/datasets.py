@@ -120,6 +120,11 @@ class TimeSeriesDataset(BaseDataset):
         self.y_cols = y_cols or list(df.columns)
         self.stride = stride
 
+    @property
+    def w(self):
+        h = self.y_len
+        return np.array([(h-i)/h for i in range(h)])
+
     def __len__(self):
         return (len(self.df) - self.x_len - self.y_len + 1)//self.stride
 
@@ -140,7 +145,7 @@ class TimeSeriesDataset(BaseDataset):
         x = self.df.iloc[idx:x_stop].loc[:, self.x_cols]
         y = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len].loc[:, self.y_cols]
         w = self.df.iloc[idx+self.x_len:idx+self.x_len+self.y_len]["weight"].copy()
-        w /= list(range(1, self.y_len+1))
+        w *= self.w
         #xy = None if val else self.df.iloc[idx:x_stop].loc[:, self.y_cols]
         xy = self.df.iloc[idx:x_stop].loc[:, self.y_cols]
 

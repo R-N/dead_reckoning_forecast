@@ -2,10 +2,11 @@ import torch
 import torch.nn.functional as F
 
 def get_weights(y, weights=True, dim=-1):
+    h = y.size(dim)
     if weights is None or weights is False:
-        weights = torch.ones(y.size(dim))
+        weights = torch.ones(h)
     if weights is True:
-        weights = torch.Tensor([1/i for i in range(1, y.size(dim)+1)])
+        weights = torch.Tensor([(h-i)/h for i in range(h)])
     weights = weights / sum(weights)
 
     extra_shape = y.shape[(dim+1):]
