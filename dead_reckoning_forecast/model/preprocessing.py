@@ -1,6 +1,6 @@
 import torchvision.transforms as transforms
 from .. import constants
-from ..util import max_vector_magnitude
+from ..util import max_vector_magnitude, log_vector, exp_vector
 
 def create_transformer(img_size=(224,224), mean_std=None, aug=False):
     augmentations = []
@@ -20,7 +20,7 @@ def create_transformer(img_size=(224,224), mean_std=None, aug=False):
     ])
 
 class Normalizer:
-    def __init__(self, dash_enabled=None, delta_mag=0, enemy_mag=0, negative_dash=False):
+    def __init__(self, dash_enabled=None, delta_mag=0, enemy_mag=0, negative_dash=False, log=False):
         self.dash_enabled = dash_enabled
         self.dash_cooldown = 2
         self.dash_length = 10
@@ -30,6 +30,7 @@ class Normalizer:
         self.enemy_mag = enemy_mag
         self.n = 0
         self.negative_dash = negative_dash
+        self.log = log
         
     def fit(self, df):
         dash_enabled = None
@@ -39,12 +40,12 @@ class Normalizer:
         if "dash_enabled" in df.columns:
             dash_enabled = bool(df.iloc[-1]["dash_enabled"])
             
-        if "last_movement_x" in df.columns:
+        if constants.last_movements[0] in df.columns:
             delta_mag = max(max_vector_magnitude(df[constants.last_movements]), max_vector_magnitude(df[constants.deltas]))
         else:
             delta_mag = max_vector_magnitude(df[constants.deltas])
-        if "enemy_relative_position_x" in df.columns:
-            enemy_mag = max_vector_magnitude(df[constants.enemy_positions])
+        if constants.enemy_positions[0] in df.columns:
+            enemy_mag = max_vector_magnitude(df[constants.enemy_positions], log=self.log)
 
         n = len(df)
 
@@ -77,13 +78,16 @@ class Normalizer:
         df[healths] /= self.max_health
         df["bullets"] /= self.max_bullets
 
-        if "last_movement_x" in df.columns:
+        if constants.last_movements[0] in df.columns:
             df[constants.deltas+constants.last_movements] /= self.delta_mag
         else:
             df[constants.deltas] /= self.delta_mag
 
-        if "enemy_relative_position_x" in df.columns:
-            df[constants.enemy_positions] /= self.enemy_mag
+        if constants.enemy_positions[0] in df.columns:
+            pos = df[constants.enemy_positions]
+            if self.log:
+                pos = log_vector(pos)
+            df[constants.enemy_positions] = pos / self.enemy_mag
         return df
     
     def inverse_transform(self, df):
@@ -103,11 +107,14 @@ class Normalizer:
         if "bullets" in df.columns:
             df["bullets"] *= self.max_bullets
 
-        if "last_movement_x" in df.columns:
+        if constants.last_movements[0] in df.columns:
             df[constants.deltas+constants.last_movements] *= self.delta_mag
         else:
             df[constants.deltas] *= self.delta_mag
 
-        if "enemy_relative_position_x" in df.columns:
-            df[constants.enemy_positions] *= self.enemy_mag
+        if constants.enemy_positions[0] in df.columns:
+            pos = df[constants.enemy_positions]
+            if self.log:
+                pos = exp_vector(pos)
+            df[constants.enemy_positions] = pos * self.enemy_mag
         return df

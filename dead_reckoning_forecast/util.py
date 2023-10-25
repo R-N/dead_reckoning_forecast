@@ -46,11 +46,28 @@ def show_video(file_path):
     clip=VideoFileClip(file_path)
     return clip.ipython_display(width=280)
 
-def vector_magnitudes(df):
-    return np.sqrt((df**2).sum(axis=1))
+def vector_magnitudes(df, log=False):
+    mag = np.sqrt((df**2).sum(axis=1))
+    if log:
+        mag = np.log(mag)
+    return mag
 
-def max_vector_magnitude(df):
-    return vector_magnitudes(df).max()
+def max_vector_magnitude(df, **kwargs):
+    return max_vector_magnitude(df, **kwargs).max()
+
+def normalize_vector(df):
+    mag = vector_magnitudes(df)
+    return df / mag
+
+def log_vector(df):
+    mag = vector_magnitudes(df, log=False)
+    mul = np.log(mag) / mag
+    return df * mul
+
+def exp_vector(df):
+    mag = vector_magnitudes(df, log=False)
+    mul = np.exp(mag) / mag
+    return df * mul
 
 def remove_leading_trailing_zeros(df, cols):
     s = df[cols].ne(0).sum(axis=1)
