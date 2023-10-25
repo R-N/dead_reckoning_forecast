@@ -313,7 +313,7 @@ def create_ts_frame_dataset(ts_dataset, frame_dir, match_type, match_id, player,
     match_id = str(match_id)
     player = str(player)
     combined_frame_dir = os.path.join(frame_dir, match_type, match_id, player, "all")
-    frames = FrameDataset(combined_frame_dir, transform=transformer, ext=".png", cache_dir=os.path.join(cache_dir, "frames"), cache_type=cache_type)
+    frames = FrameDataset(combined_frame_dir, transform=transformer, ext=".png", cache_dir=f"{cache_dir}_frames", cache_type=cache_type)
     dataset = TimeSeriesFrameDataset(ts_dataset, frames, cache_dir=cache_dir, cache_type=cache_type, **kwargs)
     return dataset
     
