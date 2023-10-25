@@ -289,31 +289,30 @@ class TimeSeriesFrameDataset(BaseDataset):
             return torch.stack([self[i] for i in idx])
         
         if self.cache and idx in self.cache:
-            x, y, w, xy = self.cache[idx]
-            frames = self.frame_dataset.get(x.index, val=val)
-            return x, frames, y, w, xy
+            return self.cache[idx]
 
         val = self.val if val is None else val
 
         x, y, w, xy = self.ts_dataset.get(idx, val=val)
+        frames = self.frame_dataset.get(x.index, val=val)
     
         x = to_tensor(x)
         y = to_tensor(y)
         w = to_tensor(w)
         xy = to_tensor(xy)
+        
+        sample =  x, frames, y, w, xy
 
         if self.cache:
-            self.cache[idx] = x, y, w, xy
+            self.cache[idx] = sample
 
-        frames = self.frame_dataset.get(x.index, val=val)
+        return sample
 
-        return x, frames, y, w, xy
-
-def create_ts_frame_dataset(ts_dataset, frame_dir, match_type, match_id, player, transformer=None, cache_dir="_cache", cache_type="pickle", **kwargs):
+def create_ts_frame_dataset(ts_dataset, frame_dir, match_type, match_id, player, transformer=None, **kwargs):
     match_id = str(match_id)
     player = str(player)
     combined_frame_dir = os.path.join(frame_dir, match_type, match_id, player, "all")
-    frames = FrameDataset(combined_frame_dir, transform=transformer, ext=".png", cache_dir=cache_dir, cache_type=cache_type)
-    dataset = TimeSeriesFrameDataset(ts_dataset, frames, cache_dir=cache_dir, cache_type=cache_type, **kwargs)
+    frames = FrameDataset(combined_frame_dir, transform=transformer, ext=".png")
+    dataset = TimeSeriesFrameDataset(ts_dataset, frames, **kwargs)
     return dataset
     
