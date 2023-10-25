@@ -87,7 +87,7 @@ class Normalizer:
             pos = df[constants.enemy_positions]
             if self.log:
                 pos = log_vector(pos)
-            print(df[constants.enemy_positions].shape, pos.shape)
+            #print(df[constants.enemy_positions].shape, pos.shape)
             df[constants.enemy_positions] = pos / self.enemy_mag
         return df
     
