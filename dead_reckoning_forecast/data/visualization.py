@@ -47,17 +47,21 @@ def plot_image_(ax, x, permute=True):
         x.shape[0]/2.
     ], cmap="gray")
 
-def plot_prediction(pred, y=None, pred_color="blue", y_color="orange", img=None, repeat_first_y=False):
+def plot_prediction(pred, y=None, x=None, pred_color="blue", y_color="orange", x_color="black", img=None, repeat_first_y=False):
     fig, ax = plt.subplots()
 
     if img is not None:
         plot_image_(ax, img)
+
+    if x is not None:
+        plot_prediction(ax, -x, color=x_color)
 
     ax.plot([0], [0], marker="o", markersize=10, markeredgecolor="black", markerfacecolor="white")
     
     if y is not None:
         n_y = plot_prediction_(ax, y, color=y_color, repeat_first=repeat_first_y)
         #axes = axes + (n_y * ["ground_truth"])
+
     
     n_pred = plot_prediction_(ax, pred, color=pred_color)
     #axes = n_pred * ["prediction"] 
