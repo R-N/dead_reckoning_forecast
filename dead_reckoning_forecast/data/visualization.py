@@ -54,7 +54,7 @@ def plot_prediction(pred, y=None, x=None, pred_color="blue", y_color="orange", x
         plot_image_(ax, img)
 
     if x is not None:
-        plot_prediction(ax, -x, color=x_color)
+        plot_prediction_(ax, -x, color=x_color)
 
     ax.plot([0], [0], marker="o", markersize=10, markeredgecolor="black", markerfacecolor="white")
     
