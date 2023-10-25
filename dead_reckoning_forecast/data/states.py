@@ -22,8 +22,8 @@ def add_weights(df):
     df.loc[begin_dash, "weight"] += 1
     end_dash = (df["dash"].diff().diff() > 0) & (df["dash"].eq(0) | np.isclose(df["dash"], 0))
     df.loc[end_dash, "weight"] += 1
-    hurt = df["health"].diff() < 0
-    df.loc[hurt, "weight"] += 1
+    #hurt = df["health"].diff() < 0
+    #df.loc[hurt, "weight"] += 1
     return df
 
 def read_states(match_dir, player, match_type, negative_dash=False):
