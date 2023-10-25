@@ -53,7 +53,7 @@ def vector_magnitudes(df, log=False):
     return mag
 
 def max_vector_magnitude(df, **kwargs):
-    return max_vector_magnitude(df, **kwargs).max()
+    return vector_magnitudes(df, **kwargs).max()
 
 def normalize_vector(df):
     mag = vector_magnitudes(df)
