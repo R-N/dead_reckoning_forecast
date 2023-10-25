@@ -62,7 +62,9 @@ def normalize_vector(df):
 def log_vector(df):
     mag = vector_magnitudes(df, log=False)
     mul = np.log(mag) / mag
-    return df * mul
+    ret = df * mul
+    print(mag.shape, mul.shape, ret.shape)
+    return ret
 
 def exp_vector(df):
     mag = vector_magnitudes(df, log=False)
