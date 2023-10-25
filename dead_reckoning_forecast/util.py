@@ -57,18 +57,19 @@ def max_vector_magnitude(df, **kwargs):
 
 def normalize_vector(df):
     mag = vector_magnitudes(df)
+    mag = np.repeat(mag[:, np.newaxis], 2, axis=-1)
     return df / mag
 
 def log_vector(df):
     mag = vector_magnitudes(df, log=False)
     mul = np.log(mag) / mag
-    ret = df * mul
-    print(mag.shape, mul.shape, ret.shape)
-    return ret
+    mul = np.repeat(mul[:, np.newaxis], 2, axis=-1)
+    return df * mul
 
 def exp_vector(df):
     mag = vector_magnitudes(df, log=False)
     mul = np.exp(mag) / mag
+    mul = np.repeat(mul[:, np.newaxis], 2, axis=-1)
     return df * mul
 
 def remove_leading_trailing_zeros(df, cols):
